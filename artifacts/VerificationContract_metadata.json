@@ -1,0 +1,270 @@
+{
+	"compiler": {
+		"version": "0.8.34+commit.80d5c536"
+	},
+	"language": "Solidity",
+	"output": {
+		"abi": [
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "mintContractAddress",
+						"type": "address"
+					},
+					{
+						"internalType": "address",
+						"name": "controlContractAddress",
+						"type": "address"
+					}
+				],
+				"stateMutability": "nonpayable",
+				"type": "constructor"
+			},
+			{
+				"inputs": [],
+				"name": "controlContract",
+				"outputs": [
+					{
+						"internalType": "contract ControlContract",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "tokenId",
+						"type": "uint256"
+					}
+				],
+				"name": "getBatchStatus",
+				"outputs": [
+					{
+						"internalType": "address",
+						"name": "currentOwner",
+						"type": "address"
+					},
+					{
+						"internalType": "enum BatchStatus",
+						"name": "status",
+						"type": "uint8"
+					},
+					{
+						"internalType": "string",
+						"name": "medicineName",
+						"type": "string"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "mintContract",
+				"outputs": [
+					{
+						"internalType": "contract MintContract",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "tokenId",
+						"type": "uint256"
+					}
+				],
+				"name": "verifyBatch",
+				"outputs": [
+					{
+						"internalType": "bool",
+						"name": "isValid",
+						"type": "bool"
+					},
+					{
+						"components": [
+							{
+								"internalType": "uint256",
+								"name": "tokenId",
+								"type": "uint256"
+							},
+							{
+								"internalType": "string",
+								"name": "medicineName",
+								"type": "string"
+							},
+							{
+								"internalType": "string",
+								"name": "batchNumber",
+								"type": "string"
+							},
+							{
+								"internalType": "uint256",
+								"name": "manufactureDate",
+								"type": "uint256"
+							},
+							{
+								"internalType": "uint256",
+								"name": "expiryDate",
+								"type": "uint256"
+							},
+							{
+								"internalType": "address",
+								"name": "manufacturer",
+								"type": "address"
+							},
+							{
+								"internalType": "enum BatchStatus",
+								"name": "status",
+								"type": "uint8"
+							}
+						],
+						"internalType": "struct BatchData",
+						"name": "batch",
+						"type": "tuple"
+					},
+					{
+						"components": [
+							{
+								"internalType": "address",
+								"name": "from",
+								"type": "address"
+							},
+							{
+								"internalType": "address",
+								"name": "to",
+								"type": "address"
+							},
+							{
+								"internalType": "enum BatchStatus",
+								"name": "status",
+								"type": "uint8"
+							},
+							{
+								"internalType": "uint256",
+								"name": "timestamp",
+								"type": "uint256"
+							},
+							{
+								"internalType": "string",
+								"name": "notes",
+								"type": "string"
+							}
+						],
+						"internalType": "struct CustodyRecord[]",
+						"name": "custodyTrail",
+						"type": "tuple[]"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			}
+		],
+		"devdoc": {
+			"kind": "dev",
+			"methods": {
+				"constructor": {
+					"params": {
+						"controlContractAddress": "Deployed address of ControlContract.",
+						"mintContractAddress": "Deployed address of MintContract."
+					}
+				},
+				"getBatchStatus(uint256)": {
+					"params": {
+						"tokenId": "The batch token to query."
+					},
+					"returns": {
+						"currentOwner": " Address of the current batch custodian.",
+						"medicineName": " Human-readable medicine name.",
+						"status": "       Current BatchStatus enum value."
+					}
+				},
+				"verifyBatch(uint256)": {
+					"params": {
+						"tokenId": "The batch token to verify."
+					},
+					"returns": {
+						"batch": "        The core batch data (medicine name, dates, manufacturer, etc.).",
+						"custodyTrail": " Ordered list of custody records from mint to current holder. TODO: Consider storing a snapshot of authorised status at mint time inside BatchData       so that legitimacy cannot be retroactively affected by revoking a manufacturer. TODO: Add expiry date check: batch.expiryDate > block.timestamp",
+						"isValid": "      True if the batch was minted by an authorised manufacturer."
+					}
+				}
+			},
+			"title": "VerificationContract",
+			"version": 1
+		},
+		"userdoc": {
+			"kind": "user",
+			"methods": {
+				"getBatchStatus(uint256)": {
+					"notice": "Lightweight status check — intended for point-of-sale / consumer QR scanning."
+				},
+				"verifyBatch(uint256)": {
+					"notice": "Verifies the origin and full supply chain history of a batch."
+				}
+			},
+			"notice": "Read-only (view) contract for verifying pharmaceutical batch authenticity.         Accessible by regulators, pharmacies, hospitals, and consumers. This contract does NOT write any state — all functions are `view`. Typical usage flow (e.g. consumer scans QR code):   1. QR code on packaging encodes a tokenId   2. Frontend calls verifyBatch(tokenId)    → confirms legitimacy + full history   3. Frontend calls getBatchStatus(tokenId) → shows current owner + status",
+			"version": 1
+		}
+	},
+	"settings": {
+		"compilationTarget": {
+			"contracts/VerificationContract.sol": "VerificationContract"
+		},
+		"evmVersion": "osaka",
+		"libraries": {},
+		"metadata": {
+			"bytecodeHash": "ipfs"
+		},
+		"optimizer": {
+			"enabled": false,
+			"runs": 200
+		},
+		"remappings": []
+	},
+	"sources": {
+		"contracts/BatchTypes.sol": {
+			"keccak256": "0x7bb00db396689bae3d2eef8c37ddb6949cf90782b5af872bf9dc3995d3c46388",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://55affdc06c4bb5587ac71d742fe0d0b33eb6ae8ffa978ef850a5a4a2768b03e6",
+				"dweb:/ipfs/QmQ1zBnDuXNuuYdjJXYNBf1c1tEqMrY2X8qW6c6tWMYtix"
+			]
+		},
+		"contracts/ControlContract.sol": {
+			"keccak256": "0xa78c04652c997f80266beb27b2384baef1497247a73ba609c6fa6a13d165de9a",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://462bb5d064169c6437ff2615b9df329ce986aad3227334bd7d2d7dea2b4e6d75",
+				"dweb:/ipfs/QmeH2kP3XzVuJJyG5RxGeb1TsECmuopMQyJiQtMuVYDHH9"
+			]
+		},
+		"contracts/MintContract.sol": {
+			"keccak256": "0xa9bd7aa1faa4c6e145cc6b3e481ff618f4e6885a01b8a9ec262171e1c6da9d9b",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://56df704e5bd9cca8207bea730c8bd80db0990f96bfa3954b4bc3fd59c1140aad",
+				"dweb:/ipfs/QmZRjpvz1qrVz5RmrJ3jLhesSZDB8oqWeKakSwWpLKnHhv"
+			]
+		},
+		"contracts/VerificationContract.sol": {
+			"keccak256": "0xe216bddb0d32975ad570e5a120c6ebce3563c516246ab8d75f7479d2051409d2",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://4a23a9cd39a9288fa920dd913b7c0f0772f1990c1e99237ddbbbe0b727d47e34",
+				"dweb:/ipfs/QmdRVPfm2dZDKftqd7fvDTaHGYcDfbafawaPSn5PoVvqpC"
+			]
+		}
+	},
+	"version": 1
+}

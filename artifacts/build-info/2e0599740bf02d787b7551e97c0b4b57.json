@@ -1,0 +1,513 @@
+{
+	"id": "2e0599740bf02d787b7551e97c0b4b57",
+	"_format": "hh-sol-build-info-1",
+	"solcVersion": "0.8.34",
+	"solcLongVersion": "0.8.34+commit.80d5c536",
+	"input": {
+		"language": "Solidity",
+		"sources": {
+			"contracts/BatchTypes.sol": {
+				"content": "// SPDX-License-Identifier: MIT\r\npragma solidity ^0.8.20;\r\n\r\n/**\r\n * @title BatchTypes\r\n * @notice Shared data types used across all OriginPharm contracts.\r\n *         Import this file into any contract that needs access to these structs/enums.\r\n */\r\n\r\n/// @notice Represents the current stage of a batch in the supply chain\r\nenum BatchStatus {\r\n    Produced,    // Minted by manufacturer; not yet released\r\n    Released,    // Released to distributor\r\n    InTransit,   // Being shipped between stakeholders\r\n    Received,    // Received at pharmacy/hospital\r\n    Dispensed    // Distributed to a patient (end of lifecycle)\r\n}\r\n\r\n/// @notice Core data stored for each pharmaceutical batch\r\nstruct BatchData {\r\n    uint256 tokenId;          // Unique batch identifier\r\n    string  medicineName;     // e.g. \"Amoxicillin 500mg\"\r\n    string  batchNumber;      // Manufacturer's internal batch ref\r\n    uint256 manufactureDate;  // Unix timestamp\r\n    uint256 expiryDate;       // Unix timestamp\r\n    address manufacturer;     // Address of the minting manufacturer\r\n    BatchStatus status;       // Current supply chain status\r\n}\r\n\r\n/// @notice A single entry in the custody history of a batch\r\nstruct CustodyRecord {\r\n    address from;       // Sender address (zero for initial mint)\r\n    address to;         // Receiver address\r\n    BatchStatus status; // Status at the time of this transfer\r\n    uint256 timestamp;  // Unix timestamp of the event\r\n    string  notes;      // Optional notes (e.g. shipment ID, carrier)\r\n}"
+			}
+		},
+		"settings": {
+			"optimizer": {
+				"enabled": false,
+				"runs": 200
+			},
+			"outputSelection": {
+				"*": {
+					"": [
+						"ast"
+					],
+					"*": [
+						"abi",
+						"metadata",
+						"devdoc",
+						"userdoc",
+						"storageLayout",
+						"evm.legacyAssembly",
+						"evm.bytecode",
+						"evm.deployedBytecode",
+						"evm.methodIdentifiers",
+						"evm.gasEstimates",
+						"evm.assembly"
+					]
+				}
+			},
+			"remappings": []
+		}
+	},
+	"output": {
+		"sources": {
+			"contracts/BatchTypes.sol": {
+				"ast": {
+					"absolutePath": "contracts/BatchTypes.sol",
+					"exportedSymbols": {
+						"BatchData": [
+							25
+						],
+						"BatchStatus": [
+							8
+						],
+						"CustodyRecord": [
+							38
+						]
+					},
+					"id": 39,
+					"license": "MIT",
+					"nodeType": "SourceUnit",
+					"nodes": [
+						{
+							"id": 1,
+							"literals": [
+								"solidity",
+								"^",
+								"0.8",
+								".20"
+							],
+							"nodeType": "PragmaDirective",
+							"src": "33:24:0"
+						},
+						{
+							"canonicalName": "BatchStatus",
+							"documentation": {
+								"id": 2,
+								"nodeType": "StructuredDocumentation",
+								"src": "253:73:0",
+								"text": "@notice Represents the current stage of a batch in the supply chain"
+							},
+							"id": 8,
+							"members": [
+								{
+									"id": 3,
+									"name": "Produced",
+									"nameLocation": "350:8:0",
+									"nodeType": "EnumValue",
+									"src": "350:8:0"
+								},
+								{
+									"id": 4,
+									"name": "Released",
+									"nameLocation": "412:8:0",
+									"nodeType": "EnumValue",
+									"src": "412:8:0"
+								},
+								{
+									"id": 5,
+									"name": "InTransit",
+									"nameLocation": "457:9:0",
+									"nodeType": "EnumValue",
+									"src": "457:9:0"
+								},
+								{
+									"id": 6,
+									"name": "Received",
+									"nameLocation": "513:8:0",
+									"nodeType": "EnumValue",
+									"src": "513:8:0"
+								},
+								{
+									"id": 7,
+									"name": "Dispensed",
+									"nameLocation": "564:9:0",
+									"nodeType": "EnumValue",
+									"src": "564:9:0"
+								}
+							],
+							"name": "BatchStatus",
+							"nameLocation": "331:11:0",
+							"nodeType": "EnumDefinition",
+							"src": "326:300:0"
+						},
+						{
+							"canonicalName": "BatchData",
+							"documentation": {
+								"id": 9,
+								"nodeType": "StructuredDocumentation",
+								"src": "630:60:0",
+								"text": "@notice Core data stored for each pharmaceutical batch"
+							},
+							"id": 25,
+							"members": [
+								{
+									"constant": false,
+									"id": 11,
+									"mutability": "mutable",
+									"name": "tokenId",
+									"nameLocation": "722:7:0",
+									"nodeType": "VariableDeclaration",
+									"scope": 25,
+									"src": "714:15:0",
+									"stateVariable": false,
+									"storageLocation": "default",
+									"typeDescriptions": {
+										"typeIdentifier": "t_uint256",
+										"typeString": "uint256"
+									},
+									"typeName": {
+										"id": 10,
+										"name": "uint256",
+										"nodeType": "ElementaryTypeName",
+										"src": "714:7:0",
+										"typeDescriptions": {
+											"typeIdentifier": "t_uint256",
+											"typeString": "uint256"
+										}
+									},
+									"visibility": "internal"
+								},
+								{
+									"constant": false,
+									"id": 13,
+									"mutability": "mutable",
+									"name": "medicineName",
+									"nameLocation": "780:12:0",
+									"nodeType": "VariableDeclaration",
+									"scope": 25,
+									"src": "772:20:0",
+									"stateVariable": false,
+									"storageLocation": "default",
+									"typeDescriptions": {
+										"typeIdentifier": "t_string_storage_ptr",
+										"typeString": "string"
+									},
+									"typeName": {
+										"id": 12,
+										"name": "string",
+										"nodeType": "ElementaryTypeName",
+										"src": "772:6:0",
+										"typeDescriptions": {
+											"typeIdentifier": "t_string_storage_ptr",
+											"typeString": "string"
+										}
+									},
+									"visibility": "internal"
+								},
+								{
+									"constant": false,
+									"id": 15,
+									"mutability": "mutable",
+									"name": "batchNumber",
+									"nameLocation": "839:11:0",
+									"nodeType": "VariableDeclaration",
+									"scope": 25,
+									"src": "831:19:0",
+									"stateVariable": false,
+									"storageLocation": "default",
+									"typeDescriptions": {
+										"typeIdentifier": "t_string_storage_ptr",
+										"typeString": "string"
+									},
+									"typeName": {
+										"id": 14,
+										"name": "string",
+										"nodeType": "ElementaryTypeName",
+										"src": "831:6:0",
+										"typeDescriptions": {
+											"typeIdentifier": "t_string_storage_ptr",
+											"typeString": "string"
+										}
+									},
+									"visibility": "internal"
+								},
+								{
+									"constant": false,
+									"id": 17,
+									"mutability": "mutable",
+									"name": "manufactureDate",
+									"nameLocation": "907:15:0",
+									"nodeType": "VariableDeclaration",
+									"scope": 25,
+									"src": "899:23:0",
+									"stateVariable": false,
+									"storageLocation": "default",
+									"typeDescriptions": {
+										"typeIdentifier": "t_uint256",
+										"typeString": "uint256"
+									},
+									"typeName": {
+										"id": 16,
+										"name": "uint256",
+										"nodeType": "ElementaryTypeName",
+										"src": "899:7:0",
+										"typeDescriptions": {
+											"typeIdentifier": "t_uint256",
+											"typeString": "uint256"
+										}
+									},
+									"visibility": "internal"
+								},
+								{
+									"constant": false,
+									"id": 19,
+									"mutability": "mutable",
+									"name": "expiryDate",
+									"nameLocation": "956:10:0",
+									"nodeType": "VariableDeclaration",
+									"scope": 25,
+									"src": "948:18:0",
+									"stateVariable": false,
+									"storageLocation": "default",
+									"typeDescriptions": {
+										"typeIdentifier": "t_uint256",
+										"typeString": "uint256"
+									},
+									"typeName": {
+										"id": 18,
+										"name": "uint256",
+										"nodeType": "ElementaryTypeName",
+										"src": "948:7:0",
+										"typeDescriptions": {
+											"typeIdentifier": "t_uint256",
+											"typeString": "uint256"
+										}
+									},
+									"visibility": "internal"
+								},
+								{
+									"constant": false,
+									"id": 21,
+									"mutability": "mutable",
+									"name": "manufacturer",
+									"nameLocation": "1005:12:0",
+									"nodeType": "VariableDeclaration",
+									"scope": 25,
+									"src": "997:20:0",
+									"stateVariable": false,
+									"storageLocation": "default",
+									"typeDescriptions": {
+										"typeIdentifier": "t_address",
+										"typeString": "address"
+									},
+									"typeName": {
+										"id": 20,
+										"name": "address",
+										"nodeType": "ElementaryTypeName",
+										"src": "997:7:0",
+										"stateMutability": "nonpayable",
+										"typeDescriptions": {
+											"typeIdentifier": "t_address",
+											"typeString": "address"
+										}
+									},
+									"visibility": "internal"
+								},
+								{
+									"constant": false,
+									"id": 24,
+									"mutability": "mutable",
+									"name": "status",
+									"nameLocation": "1079:6:0",
+									"nodeType": "VariableDeclaration",
+									"scope": 25,
+									"src": "1067:18:0",
+									"stateVariable": false,
+									"storageLocation": "default",
+									"typeDescriptions": {
+										"typeIdentifier": "t_enum$_BatchStatus_$8",
+										"typeString": "enum BatchStatus"
+									},
+									"typeName": {
+										"id": 23,
+										"nodeType": "UserDefinedTypeName",
+										"pathNode": {
+											"id": 22,
+											"name": "BatchStatus",
+											"nameLocations": [
+												"1067:11:0"
+											],
+											"nodeType": "IdentifierPath",
+											"referencedDeclaration": 8,
+											"src": "1067:11:0"
+										},
+										"referencedDeclaration": 8,
+										"src": "1067:11:0",
+										"typeDescriptions": {
+											"typeIdentifier": "t_enum$_BatchStatus_$8",
+											"typeString": "enum BatchStatus"
+										}
+									},
+									"visibility": "internal"
+								}
+							],
+							"name": "BatchData",
+							"nameLocation": "697:9:0",
+							"nodeType": "StructDefinition",
+							"scope": 39,
+							"src": "690:436:0",
+							"visibility": "public"
+						},
+						{
+							"canonicalName": "CustodyRecord",
+							"documentation": {
+								"id": 26,
+								"nodeType": "StructuredDocumentation",
+								"src": "1130:62:0",
+								"text": "@notice A single entry in the custody history of a batch"
+							},
+							"id": 38,
+							"members": [
+								{
+									"constant": false,
+									"id": 28,
+									"mutability": "mutable",
+									"name": "from",
+									"nameLocation": "1228:4:0",
+									"nodeType": "VariableDeclaration",
+									"scope": 38,
+									"src": "1220:12:0",
+									"stateVariable": false,
+									"storageLocation": "default",
+									"typeDescriptions": {
+										"typeIdentifier": "t_address",
+										"typeString": "address"
+									},
+									"typeName": {
+										"id": 27,
+										"name": "address",
+										"nodeType": "ElementaryTypeName",
+										"src": "1220:7:0",
+										"stateMutability": "nonpayable",
+										"typeDescriptions": {
+											"typeIdentifier": "t_address",
+											"typeString": "address"
+										}
+									},
+									"visibility": "internal"
+								},
+								{
+									"constant": false,
+									"id": 30,
+									"mutability": "mutable",
+									"name": "to",
+									"nameLocation": "1295:2:0",
+									"nodeType": "VariableDeclaration",
+									"scope": 38,
+									"src": "1287:10:0",
+									"stateVariable": false,
+									"storageLocation": "default",
+									"typeDescriptions": {
+										"typeIdentifier": "t_address",
+										"typeString": "address"
+									},
+									"typeName": {
+										"id": 29,
+										"name": "address",
+										"nodeType": "ElementaryTypeName",
+										"src": "1287:7:0",
+										"stateMutability": "nonpayable",
+										"typeDescriptions": {
+											"typeIdentifier": "t_address",
+											"typeString": "address"
+										}
+									},
+									"visibility": "internal"
+								},
+								{
+									"constant": false,
+									"id": 33,
+									"mutability": "mutable",
+									"name": "status",
+									"nameLocation": "1344:6:0",
+									"nodeType": "VariableDeclaration",
+									"scope": 38,
+									"src": "1332:18:0",
+									"stateVariable": false,
+									"storageLocation": "default",
+									"typeDescriptions": {
+										"typeIdentifier": "t_enum$_BatchStatus_$8",
+										"typeString": "enum BatchStatus"
+									},
+									"typeName": {
+										"id": 32,
+										"nodeType": "UserDefinedTypeName",
+										"pathNode": {
+											"id": 31,
+											"name": "BatchStatus",
+											"nameLocations": [
+												"1332:11:0"
+											],
+											"nodeType": "IdentifierPath",
+											"referencedDeclaration": 8,
+											"src": "1332:11:0"
+										},
+										"referencedDeclaration": 8,
+										"src": "1332:11:0",
+										"typeDescriptions": {
+											"typeIdentifier": "t_enum$_BatchStatus_$8",
+											"typeString": "enum BatchStatus"
+										}
+									},
+									"visibility": "internal"
+								},
+								{
+									"constant": false,
+									"id": 35,
+									"mutability": "mutable",
+									"name": "timestamp",
+									"nameLocation": "1404:9:0",
+									"nodeType": "VariableDeclaration",
+									"scope": 38,
+									"src": "1396:17:0",
+									"stateVariable": false,
+									"storageLocation": "default",
+									"typeDescriptions": {
+										"typeIdentifier": "t_uint256",
+										"typeString": "uint256"
+									},
+									"typeName": {
+										"id": 34,
+										"name": "uint256",
+										"nodeType": "ElementaryTypeName",
+										"src": "1396:7:0",
+										"typeDescriptions": {
+											"typeIdentifier": "t_uint256",
+											"typeString": "uint256"
+										}
+									},
+									"visibility": "internal"
+								},
+								{
+									"constant": false,
+									"id": 37,
+									"mutability": "mutable",
+									"name": "notes",
+									"nameLocation": "1460:5:0",
+									"nodeType": "VariableDeclaration",
+									"scope": 38,
+									"src": "1452:13:0",
+									"stateVariable": false,
+									"storageLocation": "default",
+									"typeDescriptions": {
+										"typeIdentifier": "t_string_storage_ptr",
+										"typeString": "string"
+									},
+									"typeName": {
+										"id": 36,
+										"name": "string",
+										"nodeType": "ElementaryTypeName",
+										"src": "1452:6:0",
+										"typeDescriptions": {
+											"typeIdentifier": "t_string_storage_ptr",
+											"typeString": "string"
+										}
+									},
+									"visibility": "internal"
+								}
+							],
+							"name": "CustodyRecord",
+							"nameLocation": "1199:13:0",
+							"nodeType": "StructDefinition",
+							"scope": 39,
+							"src": "1192:328:0",
+							"visibility": "public"
+						}
+					],
+					"src": "33:1487:0"
+				},
+				"id": 0
+			}
+		}
+	}
+}

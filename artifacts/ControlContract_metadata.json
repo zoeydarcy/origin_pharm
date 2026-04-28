@@ -1,0 +1,459 @@
+{
+	"compiler": {
+		"version": "0.8.34+commit.80d5c536"
+	},
+	"language": "Solidity",
+	"output": {
+		"abi": [
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "mintContractAddress",
+						"type": "address"
+					}
+				],
+				"stateMutability": "nonpayable",
+				"type": "constructor"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": true,
+						"internalType": "uint256",
+						"name": "tokenId",
+						"type": "uint256"
+					},
+					{
+						"indexed": true,
+						"internalType": "address",
+						"name": "receiver",
+						"type": "address"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "timestamp",
+						"type": "uint256"
+					}
+				],
+				"name": "BatchReceived",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": true,
+						"internalType": "uint256",
+						"name": "tokenId",
+						"type": "uint256"
+					},
+					{
+						"indexed": true,
+						"internalType": "address",
+						"name": "manufacturer",
+						"type": "address"
+					},
+					{
+						"indexed": true,
+						"internalType": "address",
+						"name": "distributor",
+						"type": "address"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "timestamp",
+						"type": "uint256"
+					}
+				],
+				"name": "BatchReleased",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": true,
+						"internalType": "uint256",
+						"name": "tokenId",
+						"type": "uint256"
+					},
+					{
+						"indexed": true,
+						"internalType": "address",
+						"name": "distributor",
+						"type": "address"
+					},
+					{
+						"indexed": true,
+						"internalType": "address",
+						"name": "recipient",
+						"type": "address"
+					},
+					{
+						"indexed": false,
+						"internalType": "string",
+						"name": "notes",
+						"type": "string"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "timestamp",
+						"type": "uint256"
+					}
+				],
+				"name": "BatchShipped",
+				"type": "event"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "distributor",
+						"type": "address"
+					}
+				],
+				"name": "authoriseDistributor",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "pharmacy",
+						"type": "address"
+					}
+				],
+				"name": "authorisePharmacy",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"name": "authorisedDistributors",
+				"outputs": [
+					{
+						"internalType": "bool",
+						"name": "",
+						"type": "bool"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"name": "authorisedPharmacies",
+				"outputs": [
+					{
+						"internalType": "bool",
+						"name": "",
+						"type": "bool"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"name": "currentCustodian",
+				"outputs": [
+					{
+						"internalType": "address",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "tokenId",
+						"type": "uint256"
+					}
+				],
+				"name": "getCustodyHistory",
+				"outputs": [
+					{
+						"components": [
+							{
+								"internalType": "address",
+								"name": "from",
+								"type": "address"
+							},
+							{
+								"internalType": "address",
+								"name": "to",
+								"type": "address"
+							},
+							{
+								"internalType": "enum BatchStatus",
+								"name": "status",
+								"type": "uint8"
+							},
+							{
+								"internalType": "uint256",
+								"name": "timestamp",
+								"type": "uint256"
+							},
+							{
+								"internalType": "string",
+								"name": "notes",
+								"type": "string"
+							}
+						],
+						"internalType": "struct CustodyRecord[]",
+						"name": "",
+						"type": "tuple[]"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "mintContract",
+				"outputs": [
+					{
+						"internalType": "contract MintContract",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "owner",
+				"outputs": [
+					{
+						"internalType": "address",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "tokenId",
+						"type": "uint256"
+					}
+				],
+				"name": "receipt",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "tokenId",
+						"type": "uint256"
+					},
+					{
+						"internalType": "address",
+						"name": "distributor",
+						"type": "address"
+					}
+				],
+				"name": "release",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "distributor",
+						"type": "address"
+					}
+				],
+				"name": "revokeDistributor",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "pharmacy",
+						"type": "address"
+					}
+				],
+				"name": "revokePharmacy",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "tokenId",
+						"type": "uint256"
+					},
+					{
+						"internalType": "address",
+						"name": "recipient",
+						"type": "address"
+					},
+					{
+						"internalType": "string",
+						"name": "notes",
+						"type": "string"
+					}
+				],
+				"name": "shipment",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			}
+		],
+		"devdoc": {
+			"details": "Each state-changing function:      1. Validates the caller's role      2. Validates the batch is in the correct preceding state      3. Updates the batch status via MintContract      4. Appends a CustodyRecord to the batch history      5. Emits an event",
+			"kind": "dev",
+			"methods": {
+				"constructor": {
+					"params": {
+						"mintContractAddress": "The deployed address of the MintContract."
+					}
+				},
+				"getCustodyHistory(uint256)": {
+					"params": {
+						"tokenId": "The batch to query."
+					}
+				},
+				"receipt(uint256)": {
+					"params": {
+						"tokenId": "The batch token being received. TODO: Enforce that msg.sender == currentCustodian[tokenId]."
+					}
+				},
+				"release(uint256,address)": {
+					"details": "Preconditions:      - Batch must exist and have status Produced      - msg.sender must be the original manufacturer of the batch      - distributor must be an authorised distributor TODO: Validate that distributor address is authorised before proceeding. TODO: Validate that msg.sender matches batch.manufacturer (not just any manufacturer).",
+					"params": {
+						"distributor": "The distributor address receiving the batch.",
+						"tokenId": "The batch token being released."
+					}
+				},
+				"shipment(uint256,address,string)": {
+					"params": {
+						"notes": "Optional shipment notes (e.g. carrier ID, temperature log reference). TODO: Enforce that msg.sender == currentCustodian[tokenId]. TODO: Consider allowing multi-hop shipments (InTransit → InTransit).",
+						"recipient": "The address of the pharmacy or hospital receiving the batch.",
+						"tokenId": "The batch token being shipped."
+					}
+				}
+			},
+			"title": "ControlContract",
+			"version": 1
+		},
+		"userdoc": {
+			"kind": "user",
+			"methods": {
+				"authorisedDistributors(address)": {
+					"notice": "Role mappings"
+				},
+				"currentCustodian(uint256)": {
+					"notice": "Maps tokenId → current custodian address"
+				},
+				"getCustodyHistory(uint256)": {
+					"notice": "Returns the full custody history array for a batch."
+				},
+				"mintContract()": {
+					"notice": "Reference to the MintContract for batch lookups and status updates"
+				},
+				"owner()": {
+					"notice": "Contract owner — manages role assignments"
+				},
+				"receipt(uint256)": {
+					"notice": "Step 3 — Pharmacy or hospital confirms receipt of a batch."
+				},
+				"release(uint256,address)": {
+					"notice": "Step 1 — Manufacturer releases a produced batch to a distributor."
+				},
+				"shipment(uint256,address,string)": {
+					"notice": "Step 2 — Distributor records a shipment event."
+				}
+			},
+			"notice": "Manages the internal supply chain pipeline for pharmaceutical batches.         Handles custody transfers: Manufacturer → Distributor → Pharmacy/Hospital. Permitted actions per role:   Manufacturer  → release()   Distributor   → shipment()   Pharmacy      → receipt()",
+			"version": 1
+		}
+	},
+	"settings": {
+		"compilationTarget": {
+			"contracts/ControlContract.sol": "ControlContract"
+		},
+		"evmVersion": "osaka",
+		"libraries": {},
+		"metadata": {
+			"bytecodeHash": "ipfs"
+		},
+		"optimizer": {
+			"enabled": false,
+			"runs": 200
+		},
+		"remappings": []
+	},
+	"sources": {
+		"contracts/BatchTypes.sol": {
+			"keccak256": "0x7bb00db396689bae3d2eef8c37ddb6949cf90782b5af872bf9dc3995d3c46388",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://55affdc06c4bb5587ac71d742fe0d0b33eb6ae8ffa978ef850a5a4a2768b03e6",
+				"dweb:/ipfs/QmQ1zBnDuXNuuYdjJXYNBf1c1tEqMrY2X8qW6c6tWMYtix"
+			]
+		},
+		"contracts/ControlContract.sol": {
+			"keccak256": "0xa78c04652c997f80266beb27b2384baef1497247a73ba609c6fa6a13d165de9a",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://462bb5d064169c6437ff2615b9df329ce986aad3227334bd7d2d7dea2b4e6d75",
+				"dweb:/ipfs/QmeH2kP3XzVuJJyG5RxGeb1TsECmuopMQyJiQtMuVYDHH9"
+			]
+		},
+		"contracts/MintContract.sol": {
+			"keccak256": "0xa9bd7aa1faa4c6e145cc6b3e481ff618f4e6885a01b8a9ec262171e1c6da9d9b",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://56df704e5bd9cca8207bea730c8bd80db0990f96bfa3954b4bc3fd59c1140aad",
+				"dweb:/ipfs/QmZRjpvz1qrVz5RmrJ3jLhesSZDB8oqWeKakSwWpLKnHhv"
+			]
+		}
+	},
+	"version": 1
+}
