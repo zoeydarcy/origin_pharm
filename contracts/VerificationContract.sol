@@ -27,6 +27,8 @@ import "./ControlContract.sol";
  * layer when it detects the BatchReceived event from ControlContract.
  * It is printed by the pharmacist and attached to individual medication boxes.
  */
+
+
 contract VerificationContract {
 
     // ─── State ────────────────────────────────────────────────────────────────
@@ -44,10 +46,19 @@ contract VerificationContract {
      * @param controlContractAddress Deployed address of ControlContract.
      */
     constructor(address mintContractAddress, address controlContractAddress) {
-        require(mintContractAddress    != address(0), "VerificationContract: zero address");
+        require(mintContractAddress != address(0), "VerificationContract: zero address");
         require(controlContractAddress != address(0), "VerificationContract: zero address");
-        mintContract    = MintContract(mintContractAddress);
+        mintContract = MintContract(mintContractAddress);
         controlContract = ControlContract(controlContractAddress);
+    }
+
+    // helper to print status 
+    function _statusLabel(BatchStatus status) internal pure returns (string memory) {
+        if (status == BatchStatus.Produced)  return "Produced";
+        if (status == BatchStatus.Released)  return "Released";
+        if (status == BatchStatus.InTransit) return "InTransit";
+        if (status == BatchStatus.Received)  return "Received";
+        return "Unknown";
     }
 
     // ─── Verification Function ────────────────────────────────────────────────
@@ -79,6 +90,8 @@ contract VerificationContract {
      * @return currentOwner     Wallet address of the current batch custodian.
      * @return custodyTrail     Full ordered array of CustodyRecords from mint to present.
      */
+     
+     
     function batchStatus(uint256 batchId)
         external
         view
@@ -89,7 +102,7 @@ contract VerificationContract {
             address        manufacturer,
             uint256        manufactureDate,
             uint256        expiryDate,
-            BatchStatus    status,
+            string memory  status,
             bool           verified,
             address        currentOwner,
             CustodyRecord[] memory custodyTrail
@@ -105,7 +118,7 @@ contract VerificationContract {
         manufacturer     = batch.manufacturer;
         manufactureDate  = batch.manufactureDate;
         expiryDate       = batch.expiryDate;
-        status           = batch.status;
+        status           = _statusLabel(batch.status);
         verified         = batch.verified;
         currentOwner     = controlContract.currentCustodian(batchId);
         custodyTrail     = controlContract.getCustodyHistory(batchId);
