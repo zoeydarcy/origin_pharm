@@ -96,15 +96,15 @@ contract VerificationContract {
         external
         view
         returns (
-            string memory  medicineName,
-            string memory  batchNumber,
-            string memory  manufacturerName,
-            address        manufacturer,
-            uint256        manufactureDate,
-            uint256        expiryDate,
+            string memory medicineName,
+            string memory batchNumber,
+            string memory manufacturerName,
+            address manufacturer,
+            uint256 manufactureDate,
+            uint256 expiryDate,
             string memory  status,
-            bool           verified,
-            address        currentOwner,
+            bool verified,
+            address currentOwner,
             CustodyRecord[] memory custodyTrail
         )
     {
@@ -112,15 +112,15 @@ contract VerificationContract {
 
         BatchData memory batch = mintContract.getBatch(batchId);
 
-        medicineName     = batch.medicineName;
-        batchNumber      = batch.batchNumber;
+        medicineName = batch.medicineName;
+        batchNumber = batch.batchNumber;
         manufacturerName = batch.manufacturerName;
-        manufacturer     = batch.manufacturer;
+        manufacturer = batch.manufacturer;
         manufactureDate  = batch.manufactureDate;
-        expiryDate       = batch.expiryDate;
-        status           = _statusLabel(batch.status);
-        verified         = batch.verified;
-        currentOwner     = controlContract.currentCustodian(batchId);
-        custodyTrail     = controlContract.getCustodyHistory(batchId);
+        expiryDate = batch.expiryDate;
+        status = _statusLabel(batch.status);
+        verified = batch.verified;
+        currentOwner = controlContract.currentCustodian(batchId);
+        custodyTrail = controlContract.getCustodyHistory(batchId);
     }
 }

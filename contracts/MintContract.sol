@@ -62,9 +62,9 @@ contract MintContract {
     event BatchMinted(
         uint256 indexed batchId,
         address indexed manufacturer,
-        string  manufacturerName,
-        string  medicineName,
-        string  batchNumber,
+        string manufacturerName,
+        string medicineName,
+        string batchNumber,
         uint256 expiryDate
     );
     event BatchVerified(uint256 indexed batchId);
@@ -170,15 +170,15 @@ contract MintContract {
         string memory verifiedName = authorisedManufacturers[msg.sender].name;
 
         _batches[batchId] = BatchData({
-            batchId:          batchId,
-            medicineName:     medicineName,
-            batchNumber:      batchNumber,
+            batchId: batchId,
+            medicineName: medicineName,
+            batchNumber: batchNumber,
             manufacturerName: verifiedName,
-            manufactureDate:  block.timestamp,
-            expiryDate:       expiryDate,
-            manufacturer:     msg.sender,
-            status:           BatchStatus.Produced,
-            verified:         false
+            manufactureDate: block.timestamp,
+            expiryDate: expiryDate,
+            manufacturer: msg.sender,
+            status: BatchStatus.Produced,
+            verified: false
         });
 
         emit BatchMinted(batchId, msg.sender, verifiedName, medicineName, batchNumber, expiryDate);

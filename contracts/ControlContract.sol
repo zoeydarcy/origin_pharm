@@ -274,11 +274,11 @@ contract ControlContract {
         string memory notes
     ) internal {
         _custodyHistory[batchId].push(CustodyRecord({
-            from:      from,
-            to:        to,
-            status:    status,
+            from: from,
+            to: to,
+            status: status,
             timestamp: block.timestamp,
-            notes:     notes
+            notes: notes
         }));
     }
 
