@@ -1,0 +1,510 @@
+{
+	"compiler": {
+		"version": "0.8.20+commit.a1b79de6"
+	},
+	"language": "Solidity",
+	"output": {
+		"abi": [
+			{
+				"inputs": [],
+				"stateMutability": "nonpayable",
+				"type": "constructor"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": true,
+						"internalType": "uint256",
+						"name": "batchId",
+						"type": "uint256"
+					},
+					{
+						"indexed": true,
+						"internalType": "address",
+						"name": "manufacturer",
+						"type": "address"
+					},
+					{
+						"indexed": false,
+						"internalType": "string",
+						"name": "manufacturerName",
+						"type": "string"
+					},
+					{
+						"indexed": false,
+						"internalType": "string",
+						"name": "medicineName",
+						"type": "string"
+					},
+					{
+						"indexed": false,
+						"internalType": "string",
+						"name": "batchNumber",
+						"type": "string"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "expiryDate",
+						"type": "uint256"
+					}
+				],
+				"name": "BatchMinted",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": true,
+						"internalType": "uint256",
+						"name": "batchId",
+						"type": "uint256"
+					}
+				],
+				"name": "BatchVerified",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": true,
+						"internalType": "address",
+						"name": "controlContract",
+						"type": "address"
+					}
+				],
+				"name": "ControlContractSet",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": true,
+						"internalType": "address",
+						"name": "manufacturer",
+						"type": "address"
+					},
+					{
+						"indexed": false,
+						"internalType": "string",
+						"name": "name",
+						"type": "string"
+					}
+				],
+				"name": "ManufacturerAuthorised",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": true,
+						"internalType": "address",
+						"name": "manufacturer",
+						"type": "address"
+					}
+				],
+				"name": "ManufacturerRevoked",
+				"type": "event"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "manufacturer",
+						"type": "address"
+					},
+					{
+						"internalType": "string",
+						"name": "name",
+						"type": "string"
+					}
+				],
+				"name": "authoriseManufacturer",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"name": "authorisedManufacturers",
+				"outputs": [
+					{
+						"internalType": "bool",
+						"name": "isAuthorised",
+						"type": "bool"
+					},
+					{
+						"internalType": "string",
+						"name": "name",
+						"type": "string"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "batchId",
+						"type": "uint256"
+					}
+				],
+				"name": "batchExists",
+				"outputs": [
+					{
+						"internalType": "bool",
+						"name": "",
+						"type": "bool"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "controlContractAddress",
+				"outputs": [
+					{
+						"internalType": "address",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "batchId",
+						"type": "uint256"
+					}
+				],
+				"name": "getBatch",
+				"outputs": [
+					{
+						"components": [
+							{
+								"internalType": "uint256",
+								"name": "batchId",
+								"type": "uint256"
+							},
+							{
+								"internalType": "string",
+								"name": "medicineName",
+								"type": "string"
+							},
+							{
+								"internalType": "string",
+								"name": "batchNumber",
+								"type": "string"
+							},
+							{
+								"internalType": "string",
+								"name": "manufacturerName",
+								"type": "string"
+							},
+							{
+								"internalType": "uint256",
+								"name": "manufactureDate",
+								"type": "uint256"
+							},
+							{
+								"internalType": "uint256",
+								"name": "expiryDate",
+								"type": "uint256"
+							},
+							{
+								"internalType": "address",
+								"name": "manufacturer",
+								"type": "address"
+							},
+							{
+								"internalType": "enum BatchStatus",
+								"name": "status",
+								"type": "uint8"
+							},
+							{
+								"internalType": "bool",
+								"name": "verified",
+								"type": "bool"
+							}
+						],
+						"internalType": "struct BatchData",
+						"name": "",
+						"type": "tuple"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "manufacturer",
+						"type": "address"
+					}
+				],
+				"name": "getManufacturerName",
+				"outputs": [
+					{
+						"internalType": "string",
+						"name": "",
+						"type": "string"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "string",
+						"name": "medicineName",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "batchNumber",
+						"type": "string"
+					},
+					{
+						"internalType": "uint256",
+						"name": "expiryDate",
+						"type": "uint256"
+					}
+				],
+				"name": "mintBatch",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "batchId",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "owner",
+				"outputs": [
+					{
+						"internalType": "address",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "manufacturer",
+						"type": "address"
+					}
+				],
+				"name": "revokeManufacturer",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "_controlContractAddress",
+						"type": "address"
+					}
+				],
+				"name": "setControlContract",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "batchId",
+						"type": "uint256"
+					}
+				],
+				"name": "setVerified",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "batchId",
+						"type": "uint256"
+					},
+					{
+						"internalType": "enum BatchStatus",
+						"name": "newStatus",
+						"type": "uint8"
+					}
+				],
+				"name": "updateStatus",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			}
+		],
+		"devdoc": {
+			"kind": "dev",
+			"methods": {
+				"authoriseManufacturer(address,string)": {
+					"params": {
+						"manufacturer": "Wallet address of the manufacturer.",
+						"name": "Owner-verified real-world name e.g. \"Pfizer Australia Pty Ltd\"."
+					}
+				},
+				"batchExists(uint256)": {
+					"params": {
+						"batchId": "The batch to check."
+					}
+				},
+				"getBatch(uint256)": {
+					"params": {
+						"batchId": "The batch to look up."
+					}
+				},
+				"getManufacturerName(address)": {
+					"params": {
+						"manufacturer": "Wallet address of the manufacturer."
+					}
+				},
+				"mintBatch(string,string,uint256)": {
+					"params": {
+						"batchNumber": "Manufacturer's internal batch reference e.g. \"BATCH-001\".",
+						"expiryDate": "Unix timestamp of the batch expiry date — must be in the future.",
+						"medicineName": "Human-readable name of the medicine e.g. \"Amoxicillin 500mg\"."
+					},
+					"returns": {
+						"batchId": "    The unique ID assigned to this batch. Travels on the packing slip."
+					}
+				},
+				"revokeManufacturer(address)": {
+					"params": {
+						"manufacturer": "Wallet address to revoke."
+					}
+				},
+				"setControlContract(address)": {
+					"params": {
+						"_controlContractAddress": "Deployed address of ControlContract."
+					}
+				},
+				"setVerified(uint256)": {
+					"params": {
+						"batchId": "The batch to mark as verified."
+					}
+				},
+				"updateStatus(uint256,uint8)": {
+					"params": {
+						"batchId": "The batch to update.",
+						"newStatus": "The new BatchStatus value."
+					}
+				}
+			},
+			"title": "MintContract",
+			"version": 1
+		},
+		"userdoc": {
+			"kind": "user",
+			"methods": {
+				"authoriseManufacturer(address,string)": {
+					"notice": "Registers a manufacturer with their verified wallet address and real-world name.         Name is set by the Owner — the manufacturer cannot self-report their identity.         In practice, names are sourced from the TGA verified manufacturer database."
+				},
+				"authorisedManufacturers(address)": {
+					"notice": "Registry of authorised manufacturers.         Stores owner-verified wallet address and real-world name."
+				},
+				"batchExists(uint256)": {
+					"notice": "Returns true if a batchId has been minted."
+				},
+				"controlContractAddress()": {
+					"notice": "Address of the deployed ControlContract.         Set post-deployment via setControlContract(). Used for onlyControlContract."
+				},
+				"getBatch(uint256)": {
+					"notice": "Returns the full BatchData struct for a given batchId.         Includes manufacturerName, verified flag, and current status."
+				},
+				"getManufacturerName(address)": {
+					"notice": "Returns the verified name of a registered manufacturer.         Used by ControlContract to display manufacturer identity in custody records."
+				},
+				"mintBatch(string,string,uint256)": {
+					"notice": "Mints a batch token representing a newly produced pharmaceutical batch.         Called by the manufacturer when a physical batch of medicine is produced.         The manufacturer's verified name is read from the registry automatically —         they do not pass their own name as a parameter."
+				},
+				"owner()": {
+					"notice": "Owner wallet — TGA / OriginPharm platform.         Controls all participant registration. Has no supply chain write access."
+				},
+				"revokeManufacturer(address)": {
+					"notice": "Revokes a manufacturer's authorisation.         Revoked manufacturers can no longer call mintBatch()."
+				},
+				"setControlContract(address)": {
+					"notice": "Sets the ControlContract address after deployment.         Must be called once before any supply chain activity begins.         Enables the onlyControlContract modifier on updateStatus() and setVerified()."
+				},
+				"setVerified(uint256)": {
+					"notice": "Sets verified = true when receipt() closes the supply chain cycle.         Called by ControlContract only after the pharmacist confirms delivery.         Triggers the QR code generation event on the application layer."
+				},
+				"updateStatus(uint256,uint8)": {
+					"notice": "Updates the status of a batch as it progresses through the supply chain.         Called by ControlContract only — no external wallet can change batch state."
+				}
+			},
+			"notice": "Layer 1 of OriginPharm — participant registration and batch token creation. The Owner (OriginPharm / TGA equivalent) registers every supply chain participant with their verified wallet address and real-world name before any supply chain activity is possible. Participants cannot self-report their own name. When a new batch of medicine is produced, the manufacturer calls mintBatch(). A unique batchId is assigned and the manufacturer's verified name is read automatically from the registry — it is never passed as a parameter. Only ControlContract can update batch state via onlyControlContract modifier. No external wallet can manipulate batch records directly. Deployment note:   1. Deploy MintContract   2. Deploy ControlContract with MintContract address   3. Call setControlContract() on MintContract with ControlContract address",
+			"version": 1
+		}
+	},
+	"settings": {
+		"compilationTarget": {
+			"contracts/MintContract.sol": "MintContract"
+		},
+		"evmVersion": "shanghai",
+		"libraries": {},
+		"metadata": {
+			"bytecodeHash": "ipfs"
+		},
+		"optimizer": {
+			"enabled": false,
+			"runs": 200
+		},
+		"remappings": []
+	},
+	"sources": {
+		"contracts/BatchTypes.sol": {
+			"keccak256": "0x798824bdce7ebb512cc652b98b9a51846738d0a7fee75dab074cb395952ffe88",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://3fac7ba6ef2730120330e91f4ff8caa0035d50d2d479ba256d9cbde74a276592",
+				"dweb:/ipfs/QmTkvN5vxTTLnrfHg8FhVfeeywuDAU4Mdnn1qwr7PrXNvq"
+			]
+		},
+		"contracts/MintContract.sol": {
+			"keccak256": "0x3df479aab25852385e461a7fa8cd17e1863a34dfeda6b23e1e8d1192e6cddc43",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://0fb9cf2a4d56685b1b4f514abf7dcf30f623c3279da08a78f3976b7283f50124",
+				"dweb:/ipfs/QmNNM49KMYtWfT3Jp5se3r3oBWVPECUdXfyVUqut51yPTn"
+			]
+		}
+	},
+	"version": 1
+}

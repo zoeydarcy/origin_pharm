@@ -1,6 +1,6 @@
 {
 	"compiler": {
-		"version": "0.8.34+commit.80d5c536"
+		"version": "0.8.20+commit.a1b79de6"
 	},
 	"language": "Solidity",
 	"output": {
@@ -22,32 +22,44 @@
 				"type": "constructor"
 			},
 			{
-				"inputs": [],
-				"name": "controlContract",
-				"outputs": [
-					{
-						"internalType": "contract ControlContract",
-						"name": "",
-						"type": "address"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
 				"inputs": [
 					{
 						"internalType": "uint256",
-						"name": "tokenId",
+						"name": "batchId",
 						"type": "uint256"
 					}
 				],
-				"name": "getBatchStatus",
+				"name": "batchStatus",
 				"outputs": [
 					{
+						"internalType": "string",
+						"name": "medicineName",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "batchNumber",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "manufacturerName",
+						"type": "string"
+					},
+					{
 						"internalType": "address",
-						"name": "currentOwner",
+						"name": "manufacturer",
 						"type": "address"
+					},
+					{
+						"internalType": "uint256",
+						"name": "manufactureDate",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "expiryDate",
+						"type": "uint256"
 					},
 					{
 						"internalType": "enum BatchStatus",
@@ -55,83 +67,14 @@
 						"type": "uint8"
 					},
 					{
-						"internalType": "string",
-						"name": "medicineName",
-						"type": "string"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [],
-				"name": "mintContract",
-				"outputs": [
-					{
-						"internalType": "contract MintContract",
-						"name": "",
-						"type": "address"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "uint256",
-						"name": "tokenId",
-						"type": "uint256"
-					}
-				],
-				"name": "verifyBatch",
-				"outputs": [
-					{
 						"internalType": "bool",
-						"name": "isValid",
+						"name": "verified",
 						"type": "bool"
 					},
 					{
-						"components": [
-							{
-								"internalType": "uint256",
-								"name": "tokenId",
-								"type": "uint256"
-							},
-							{
-								"internalType": "string",
-								"name": "medicineName",
-								"type": "string"
-							},
-							{
-								"internalType": "string",
-								"name": "batchNumber",
-								"type": "string"
-							},
-							{
-								"internalType": "uint256",
-								"name": "manufactureDate",
-								"type": "uint256"
-							},
-							{
-								"internalType": "uint256",
-								"name": "expiryDate",
-								"type": "uint256"
-							},
-							{
-								"internalType": "address",
-								"name": "manufacturer",
-								"type": "address"
-							},
-							{
-								"internalType": "enum BatchStatus",
-								"name": "status",
-								"type": "uint8"
-							}
-						],
-						"internalType": "struct BatchData",
-						"name": "batch",
-						"type": "tuple"
+						"internalType": "address",
+						"name": "currentOwner",
+						"type": "address"
 					},
 					{
 						"components": [
@@ -168,35 +111,58 @@
 				],
 				"stateMutability": "view",
 				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "controlContract",
+				"outputs": [
+					{
+						"internalType": "contract ControlContract",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "mintContract",
+				"outputs": [
+					{
+						"internalType": "contract MintContract",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
 			}
 		],
 		"devdoc": {
 			"kind": "dev",
 			"methods": {
+				"batchStatus(uint256)": {
+					"params": {
+						"batchId": "The unique batch identifier — scanned from QR code or searched directly."
+					},
+					"returns": {
+						"batchNumber": "     Manufacturer's internal batch reference e.g. \"BATCH-001\".",
+						"currentOwner": "    Wallet address of the current batch custodian.",
+						"custodyTrail": "    Full ordered array of CustodyRecords from mint to present.",
+						"expiryDate": "      Unix timestamp of the batch expiry date.",
+						"manufactureDate": " Unix timestamp of when the batch was minted.",
+						"manufacturer": "    Wallet address of the minting manufacturer.",
+						"manufacturerName": "Owner-verified manufacturer name e.g. \"Pfizer Australia Pty Ltd\".",
+						"medicineName": "    Human-readable medicine name e.g. \"Amoxicillin 500mg\".",
+						"status": "          Current BatchStatus enum value.",
+						"verified": "        True if receipt() has closed the cycle successfully."
+					}
+				},
 				"constructor": {
 					"params": {
 						"controlContractAddress": "Deployed address of ControlContract.",
 						"mintContractAddress": "Deployed address of MintContract."
-					}
-				},
-				"getBatchStatus(uint256)": {
-					"params": {
-						"tokenId": "The batch token to query."
-					},
-					"returns": {
-						"currentOwner": " Address of the current batch custodian.",
-						"medicineName": " Human-readable medicine name.",
-						"status": "       Current BatchStatus enum value."
-					}
-				},
-				"verifyBatch(uint256)": {
-					"params": {
-						"tokenId": "The batch token to verify."
-					},
-					"returns": {
-						"batch": "        The core batch data (medicine name, dates, manufacturer, etc.).",
-						"custodyTrail": " Ordered list of custody records from mint to current holder. TODO: Consider storing a snapshot of authorised status at mint time inside BatchData       so that legitimacy cannot be retroactively affected by revoking a manufacturer. TODO: Add expiry date check: batch.expiryDate > block.timestamp",
-						"isValid": "      True if the batch was minted by an authorised manufacturer."
 					}
 				}
 			},
@@ -206,14 +172,17 @@
 		"userdoc": {
 			"kind": "user",
 			"methods": {
-				"getBatchStatus(uint256)": {
-					"notice": "Lightweight status check — intended for point-of-sale / consumer QR scanning."
+				"batchStatus(uint256)": {
+					"notice": "Returns the complete batch record for a given batchId.         This is the single entry point for all stakeholders — pharmacy,         consumer, regulator, and auditor.         Callable at any point in the batch lifecycle:           After mintBatch():  status=Produced,  verified=false, empty trail           After release():    status=Released,  verified=false, 1 custody record           After shipment():   status=InTransit, verified=false, 2 custody records           After receipt():    status=Received,  verified=true,  full trail         For consumers — only meaningful after the QR code exists on the box,         which only happens after receipt() sets verified=true."
 				},
-				"verifyBatch(uint256)": {
-					"notice": "Verifies the origin and full supply chain history of a batch."
+				"controlContract()": {
+					"notice": "Reference to ControlContract — source of custody history and current custodian."
+				},
+				"mintContract()": {
+					"notice": "Reference to MintContract — source of batch data and verified status."
 				}
 			},
-			"notice": "Read-only (view) contract for verifying pharmaceutical batch authenticity.         Accessible by regulators, pharmacies, hospitals, and consumers. This contract does NOT write any state — all functions are `view`. Typical usage flow (e.g. consumer scans QR code):   1. QR code on packaging encodes a tokenId   2. Frontend calls verifyBatch(tokenId)    → confirms legitimacy + full history   3. Frontend calls getBatchStatus(tokenId) → shows current owner + status",
+			"notice": "Layer 3 of OriginPharm — read-only verification for all stakeholders. This contract has no state of its own and no write functions. It reads from both MintContract and ControlContract and returns the complete batch record in a single call. Used by:   - Pharmacy: calls batchStatus(batchId) before receipt() to verify the on-chain               record matches the physical delivery (medicine name, manufacturer,               batch number, expiry date). If matched, proceeds to call receipt().   - Consumer: scans QR code on medication box → reads batchId → calls batchStatus()               to confirm the medicine completed the verified supply chain.   - Regulator/Auditor: calls batchStatus() with batchId to audit the full               custody trail and verified status of any batch. The QR code on the medication box encodes only the batchId. All data lives on-chain. The QR code is generated by the application layer when it detects the BatchReceived event from ControlContract. It is printed by the pharmacist and attached to individual medication boxes.",
 			"version": 1
 		}
 	},
@@ -221,7 +190,7 @@
 		"compilationTarget": {
 			"contracts/VerificationContract.sol": "VerificationContract"
 		},
-		"evmVersion": "osaka",
+		"evmVersion": "shanghai",
 		"libraries": {},
 		"metadata": {
 			"bytecodeHash": "ipfs"
@@ -234,35 +203,35 @@
 	},
 	"sources": {
 		"contracts/BatchTypes.sol": {
-			"keccak256": "0x7bb00db396689bae3d2eef8c37ddb6949cf90782b5af872bf9dc3995d3c46388",
+			"keccak256": "0x798824bdce7ebb512cc652b98b9a51846738d0a7fee75dab074cb395952ffe88",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://55affdc06c4bb5587ac71d742fe0d0b33eb6ae8ffa978ef850a5a4a2768b03e6",
-				"dweb:/ipfs/QmQ1zBnDuXNuuYdjJXYNBf1c1tEqMrY2X8qW6c6tWMYtix"
+				"bzz-raw://3fac7ba6ef2730120330e91f4ff8caa0035d50d2d479ba256d9cbde74a276592",
+				"dweb:/ipfs/QmTkvN5vxTTLnrfHg8FhVfeeywuDAU4Mdnn1qwr7PrXNvq"
 			]
 		},
 		"contracts/ControlContract.sol": {
-			"keccak256": "0xa78c04652c997f80266beb27b2384baef1497247a73ba609c6fa6a13d165de9a",
+			"keccak256": "0x71b2bcf076a92f0cb0387c45e96505309aeb7291c0294faf32c5c2ecbd42cfb4",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://462bb5d064169c6437ff2615b9df329ce986aad3227334bd7d2d7dea2b4e6d75",
-				"dweb:/ipfs/QmeH2kP3XzVuJJyG5RxGeb1TsECmuopMQyJiQtMuVYDHH9"
+				"bzz-raw://4c7a49cbfc8250addc32b1a57a05a3c213ee2538cedccf5c2f650263175e41c7",
+				"dweb:/ipfs/QmbV6FQ1Ds4Eocshp6Z8pWgAh75rSr8J31iBRAqfaWCkDE"
 			]
 		},
 		"contracts/MintContract.sol": {
-			"keccak256": "0xa9bd7aa1faa4c6e145cc6b3e481ff618f4e6885a01b8a9ec262171e1c6da9d9b",
+			"keccak256": "0x3df479aab25852385e461a7fa8cd17e1863a34dfeda6b23e1e8d1192e6cddc43",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://56df704e5bd9cca8207bea730c8bd80db0990f96bfa3954b4bc3fd59c1140aad",
-				"dweb:/ipfs/QmZRjpvz1qrVz5RmrJ3jLhesSZDB8oqWeKakSwWpLKnHhv"
+				"bzz-raw://0fb9cf2a4d56685b1b4f514abf7dcf30f623c3279da08a78f3976b7283f50124",
+				"dweb:/ipfs/QmNNM49KMYtWfT3Jp5se3r3oBWVPECUdXfyVUqut51yPTn"
 			]
 		},
 		"contracts/VerificationContract.sol": {
-			"keccak256": "0xe216bddb0d32975ad570e5a120c6ebce3563c516246ab8d75f7479d2051409d2",
+			"keccak256": "0x0d236a2b60793fdd1d22204fb525e7971db284f8d78d2482f40f831cbcf65c4c",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://4a23a9cd39a9288fa920dd913b7c0f0772f1990c1e99237ddbbbe0b727d47e34",
-				"dweb:/ipfs/QmdRVPfm2dZDKftqd7fvDTaHGYcDfbafawaPSn5PoVvqpC"
+				"bzz-raw://f105babeccc57694a81eefde1805d6c2429722866c3c5f476493181bcbffd0dd",
+				"dweb:/ipfs/QmPPJLVcwkSx3rSZo9Gp8sroiR6TkcmBi9CKuAot8GcKLP"
 			]
 		}
 	},

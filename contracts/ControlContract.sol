@@ -6,74 +6,107 @@ import "./MintContract.sol";
 
 /**
  * @title ControlContract
- * @notice Manages the internal supply chain pipeline for pharmaceutical batches.
- *         Handles custody transfers: Manufacturer → Distributor → Pharmacy/Hospital.
+ * @notice Layer 2 of OriginPharm — the supply chain pipeline.
  *
- * Permitted actions per role:
- *   Manufacturer  → release()
- *   Distributor   → shipment()
- *   Pharmacy      → receipt()
+ * Manages all custody transfers across the supply chain:
+ *   Manufacturer → release()  → Distributor
+ *   Distributor  → shipment() → Pharmacy
+ *   Pharmacy     → receipt()  → cycle closes, verified = true, QR code generated
  *
- * @dev Each state-changing function:
- *      1. Validates the caller's role
- *      2. Validates the batch is in the correct preceding state
- *      3. Updates the batch status via MintContract
- *      4. Appends a CustodyRecord to the batch history
- *      5. Emits an event
+ * Access is enforced through role-based modifiers:
+ *   onlyManufacturer → release()
+ *   onlyDistributor  → shipment()
+ *   onlyPharmacy     → receipt()
+ *
+ * Custodian enforcement is applied across all three functions:
+ *   require(msg.sender == currentCustodian[batchId])
+ *   Only the current token holder can progress the batch.
+ *
+ * All state changes in MintContract are routed through this contract only.
+ * No external wallet can mutate batch state directly.
+ *
+ * Deployment note:
+ *   Deploy after MintContract. Pass MintContract address to constructor.
+ *   Then call MintContract.setControlContract(thisAddress) to complete the wiring.
  */
 contract ControlContract {
 
     // ─── State ────────────────────────────────────────────────────────────────
 
-    /// @notice Reference to the MintContract for batch lookups and status updates
+    /// @notice Reference to MintContract for batch lookups and state updates.
     MintContract public mintContract;
 
-    /// @notice Contract owner — manages role assignments
+    /// @notice Owner wallet — same deployer as MintContract.
     address public owner;
 
-    /// @notice Role mappings
-    mapping(address => bool) public authorisedDistributors;
-    mapping(address => bool) public authorisedPharmacies;
+    /// @notice Registry of authorised distributors with owner-verified names.
+    mapping(address => VerifiedParty) public authorisedDistributors;
 
-    /// @notice Maps tokenId → ordered list of custody records
+    /// @notice Registry of authorised pharmacies with owner-verified names.
+    mapping(address => VerifiedParty) public authorisedPharmacies;
+
+    /// @notice Full ordered custody trail per batch. Appended by each pipeline function.
     mapping(uint256 => CustodyRecord[]) private _custodyHistory;
 
-    /// @notice Maps tokenId → current custodian address
+    /// @notice Current custodian (token holder) per batch.
+    ///         Updated by each pipeline function. Used for custodian enforcement.
     mapping(uint256 => address) public currentCustodian;
 
     // ─── Events ───────────────────────────────────────────────────────────────
 
-    event BatchReleased(uint256 indexed tokenId, address indexed manufacturer, address indexed distributor, uint256 timestamp);
-    event BatchShipped(uint256 indexed tokenId, address indexed distributor, address indexed recipient, string notes, uint256 timestamp);
-    event BatchReceived(uint256 indexed tokenId, address indexed receiver, uint256 timestamp);
+    event DistributorAuthorised(address indexed distributor, string name);
+    event DistributorRevoked(address indexed distributor);
+    event PharmacyAuthorised(address indexed pharmacy, string name);
+    event PharmacyRevoked(address indexed pharmacy);
+
+    event BatchReleased(
+        uint256 indexed batchId,
+        address indexed manufacturer,
+        address indexed distributor,
+        uint256 timestamp
+    );
+    event BatchShipped(
+        uint256 indexed batchId,
+        address indexed distributor,
+        address indexed pharmacy,
+        string  notes,
+        uint256 timestamp
+    );
+    event BatchReceived(
+        uint256 indexed batchId,
+        address indexed pharmacy,
+        uint256 timestamp
+    );
 
     // ─── Modifiers ────────────────────────────────────────────────────────────
 
+    /// @notice Restricts function to the contract owner.
     modifier onlyOwner() {
         require(msg.sender == owner, "ControlContract: caller is not owner");
         _;
     }
 
-    modifier onlyAuthorisedManufacturer() {
-        require(
-            mintContract.authorisedManufacturers(msg.sender),
-            "ControlContract: caller is not an authorised manufacturer"
-        );
+    /// @notice Restricts function to authorised manufacturers (verified in MintContract).
+    modifier onlyManufacturer() {
+        (bool isAuth, ) = mintContract.authorisedManufacturers(msg.sender);
+        require(isAuth, "ControlContract: caller is not an authorised manufacturer");
         _;
     }
 
+    /// @notice Restricts function to authorised distributors.
     modifier onlyDistributor() {
         require(
-            authorisedDistributors[msg.sender],
+            authorisedDistributors[msg.sender].isAuthorised,
             "ControlContract: caller is not an authorised distributor"
         );
         _;
     }
 
+    /// @notice Restricts function to authorised pharmacies.
     modifier onlyPharmacy() {
         require(
-            authorisedPharmacies[msg.sender],
-            "ControlContract: caller is not an authorised pharmacy/hospital"
+            authorisedPharmacies[msg.sender].isAuthorised,
+            "ControlContract: caller is not an authorised pharmacy"
         );
         _;
     }
@@ -81,130 +114,166 @@ contract ControlContract {
     // ─── Constructor ──────────────────────────────────────────────────────────
 
     /**
-     * @param mintContractAddress The deployed address of the MintContract.
+     * @param mintContractAddress Deployed address of MintContract.
      */
     constructor(address mintContractAddress) {
+        require(mintContractAddress != address(0), "ControlContract: zero address");
         owner = msg.sender;
         mintContract = MintContract(mintContractAddress);
     }
 
-    // ─── Role Management ──────────────────────────────────────────────────────
+    // ─── Owner Functions — Role Registration ──────────────────────────────────
 
-    function authoriseDistributor(address distributor) external onlyOwner {
-        // TODO: non-zero address check
-        authorisedDistributors[distributor] = true;
+    /**
+     * @notice Registers a distributor with their owner-verified name.
+     *         In practice, names are sourced from the TGA verified participant database.
+     * @param distributor Wallet address of the distributor.
+     * @param name        Owner-verified real-world name e.g. "AusPost Logistics".
+     */
+    function authoriseDistributor(address distributor, string calldata name) external onlyOwner {
+        require(distributor != address(0), "ControlContract: zero address");
+        require(bytes(name).length > 0,   "ControlContract: name cannot be empty");
+        authorisedDistributors[distributor] = VerifiedParty({ isAuthorised: true, name: name });
+        emit DistributorAuthorised(distributor, name);
     }
 
+    /**
+     * @notice Revokes a distributor's authorisation.
+     * @param distributor Wallet address to revoke.
+     */
     function revokeDistributor(address distributor) external onlyOwner {
-        authorisedDistributors[distributor] = false;
+        require(authorisedDistributors[distributor].isAuthorised, "ControlContract: not currently authorised");
+        authorisedDistributors[distributor].isAuthorised = false;
+        emit DistributorRevoked(distributor);
     }
 
-    function authorisePharmacy(address pharmacy) external onlyOwner {
-        // TODO: non-zero address check
-        authorisedPharmacies[pharmacy] = true;
+    /**
+     * @notice Registers a pharmacy with their owner-verified name.
+     * @param pharmacy Wallet address of the pharmacy.
+     * @param name     Owner-verified real-world name e.g. "Terry White — George St".
+     */
+    function authorisePharmacy(address pharmacy, string calldata name) external onlyOwner {
+        require(pharmacy != address(0), "ControlContract: zero address");
+        require(bytes(name).length > 0, "ControlContract: name cannot be empty");
+        authorisedPharmacies[pharmacy] = VerifiedParty({ isAuthorised: true, name: name });
+        emit PharmacyAuthorised(pharmacy, name);
     }
 
+    /**
+     * @notice Revokes a pharmacy's authorisation.
+     * @param pharmacy Wallet address to revoke.
+     */
     function revokePharmacy(address pharmacy) external onlyOwner {
-        authorisedPharmacies[pharmacy] = false;
+        require(authorisedPharmacies[pharmacy].isAuthorised, "ControlContract: not currently authorised");
+        authorisedPharmacies[pharmacy].isAuthorised = false;
+        emit PharmacyRevoked(pharmacy);
     }
 
-    // ─── Supply Chain Functions ───────────────────────────────────────────────
+    // ─── Supply Chain Pipeline ────────────────────────────────────────────────
 
     /**
      * @notice Step 1 — Manufacturer releases a produced batch to a distributor.
-     * @param tokenId     The batch token being released.
-     * @param distributor The distributor address receiving the batch.
+     *         The batchId travels on the packing slip accompanying the physical handover.
+     *         Status: Produced → Released.
      *
-     * @dev Preconditions:
-     *      - Batch must exist and have status Produced
-     *      - msg.sender must be the original manufacturer of the batch
-     *      - distributor must be an authorised distributor
-     *
-     * TODO: Validate that distributor address is authorised before proceeding.
-     * TODO: Validate that msg.sender matches batch.manufacturer (not just any manufacturer).
+     * @param batchId     The batch being released.
+     * @param distributor Wallet address of the receiving distributor — must be authorised.
      */
-    function release(uint256 tokenId, address distributor)
-        external
-        onlyAuthorisedManufacturer
-    {
-        BatchData memory batch = mintContract.getBatch(tokenId);
+    function release(uint256 batchId, address distributor) external onlyManufacturer {
+        require(mintContract.batchExists(batchId), "ControlContract: batch does not exist");
+        require(authorisedDistributors[distributor].isAuthorised, "ControlContract: distributor is not authorised");
 
-        require(
-            batch.status == BatchStatus.Produced,
-            "ControlContract: batch must be in Produced state to release"
-        );
+        BatchData memory batch = mintContract.getBatch(batchId);
 
-        mintContract.updateStatus(tokenId, BatchStatus.Released);
+        require(batch.status == BatchStatus.Produced, "ControlContract: batch must be Produced to release");
+        require(msg.sender == batch.manufacturer,     "ControlContract: caller is not the batch manufacturer");
 
-        _appendCustody(tokenId, msg.sender, distributor, BatchStatus.Released, "");
-        currentCustodian[tokenId] = distributor;
+        mintContract.updateStatus(batchId, BatchStatus.Released);
 
-        emit BatchReleased(tokenId, msg.sender, distributor, block.timestamp);
+        _appendCustody(batchId, msg.sender, distributor, BatchStatus.Released, "");
+        currentCustodian[batchId] = distributor;
+
+        emit BatchReleased(batchId, msg.sender, distributor, block.timestamp);
     }
 
     /**
-     * @notice Step 2 — Distributor records a shipment event.
-     * @param tokenId   The batch token being shipped.
-     * @param recipient The address of the pharmacy or hospital receiving the batch.
-     * @param notes     Optional shipment notes (e.g. carrier ID, temperature log reference).
+     * @notice Step 2 — Distributor records a shipment to the pharmacy.
+     *         The batchId travels on the delivery documentation to the pharmacy.
+     *         Status: Released → InTransit.
      *
-     * TODO: Enforce that msg.sender == currentCustodian[tokenId].
-     * TODO: Consider allowing multi-hop shipments (InTransit → InTransit).
+     * @param batchId   The batch being shipped.
+     * @param pharmacy  Wallet address of the receiving pharmacy — must be authorised.
+     * @param notes     Optional carrier notes e.g. "AusPost Ref: AUS-993, Temp: 2-8°C".
      */
-    function shipment(uint256 tokenId, address recipient, string calldata notes)
-        external
-        onlyDistributor
-    {
-        BatchData memory batch = mintContract.getBatch(tokenId);
+    function shipment(uint256 batchId, address pharmacy, string calldata notes) external onlyDistributor {
+        require(mintContract.batchExists(batchId), "ControlContract: batch does not exist");
+        require(authorisedPharmacies[pharmacy].isAuthorised, "ControlContract: pharmacy is not authorised");
+        require(msg.sender == currentCustodian[batchId], "ControlContract: caller is not the current custodian");
+
+        BatchData memory batch = mintContract.getBatch(batchId);
 
         require(
             batch.status == BatchStatus.Released || batch.status == BatchStatus.InTransit,
             "ControlContract: batch must be Released or InTransit to ship"
         );
 
-        mintContract.updateStatus(tokenId, BatchStatus.InTransit);
+        mintContract.updateStatus(batchId, BatchStatus.InTransit);
 
-        _appendCustody(tokenId, msg.sender, recipient, BatchStatus.InTransit, notes);
-        currentCustodian[tokenId] = recipient;
+        _appendCustody(batchId, msg.sender, pharmacy, BatchStatus.InTransit, notes);
+        currentCustodian[batchId] = pharmacy;
 
-        emit BatchShipped(tokenId, msg.sender, recipient, notes, block.timestamp);
+        emit BatchShipped(batchId, msg.sender, pharmacy, notes, block.timestamp);
     }
 
     /**
-     * @notice Step 3 — Pharmacy or hospital confirms receipt of a batch.
-     * @param tokenId The batch token being received.
+     * @notice Step 3 — Pharmacy confirms delivery and closes the supply chain cycle.
      *
-     * TODO: Enforce that msg.sender == currentCustodian[tokenId].
+     *         Before calling this function, the pharmacist should call
+     *         VerificationContract.batchStatus(batchId) to read the on-chain record
+     *         and compare it against the physical delivery. If the medicine name,
+     *         manufacturer, batch number, and expiry date all match — proceed.
+     *
+     *         On success:
+     *           - verified is set to true in MintContract
+     *           - status moves to Received
+     *           - BatchReceived event is emitted
+     *           - The application layer detects the event and generates the printable QR code
+     *           - The pharmacist prints the QR code and attaches it to medication boxes
+     *
+     *         The QR code encodes only the batchId. All data lives on-chain.
+     *         Consumers scan the QR and call batchStatus(batchId) to verify.
+     *
+     * @param batchId The batch being received — taken from the packing slip.
      */
-    function receipt(uint256 tokenId)
-        external
-        onlyPharmacy
-    {
-        BatchData memory batch = mintContract.getBatch(tokenId);
+    function receipt(uint256 batchId) external onlyPharmacy {
+        require(mintContract.batchExists(batchId), "ControlContract: batch does not exist");
+        require(msg.sender == currentCustodian[batchId], "ControlContract: caller is not the current custodian");
 
-        require(
-            batch.status == BatchStatus.InTransit,
-            "ControlContract: batch must be InTransit to confirm receipt"
-        );
+        BatchData memory batch = mintContract.getBatch(batchId);
 
-        mintContract.updateStatus(tokenId, BatchStatus.Received);
+        require(batch.status == BatchStatus.InTransit, "ControlContract: batch must be InTransit to receive");
 
-        _appendCustody(tokenId, currentCustodian[tokenId], msg.sender, BatchStatus.Received, "");
-        currentCustodian[tokenId] = msg.sender;
+        // Close the cycle — set verified = true and status = Received
+        mintContract.setVerified(batchId);
+        mintContract.updateStatus(batchId, BatchStatus.Received);
 
-        emit BatchReceived(tokenId, msg.sender, block.timestamp);
+        _appendCustody(batchId, currentCustodian[batchId], msg.sender, BatchStatus.Received, "");
+        currentCustodian[batchId] = msg.sender;
+
+        // Emitting BatchReceived signals the application layer to generate the printable QR code
+        emit BatchReceived(batchId, msg.sender, block.timestamp);
     }
 
     // ─── Internal Helpers ─────────────────────────────────────────────────────
 
     function _appendCustody(
-        uint256 tokenId,
+        uint256 batchId,
         address from,
         address to,
         BatchStatus status,
         string memory notes
     ) internal {
-        _custodyHistory[tokenId].push(CustodyRecord({
+        _custodyHistory[batchId].push(CustodyRecord({
             from:      from,
             to:        to,
             status:    status,
@@ -216,14 +285,11 @@ contract ControlContract {
     // ─── Read Functions ───────────────────────────────────────────────────────
 
     /**
-     * @notice Returns the full custody history array for a batch.
-     * @param tokenId The batch to query.
+     * @notice Returns the full ordered custody trail for a batch.
+     *         Each record represents one handoff in the supply chain.
+     * @param batchId The batch to query.
      */
-    function getCustodyHistory(uint256 tokenId)
-        external
-        view
-        returns (CustodyRecord[] memory)
-    {
-        return _custodyHistory[tokenId];
+    function getCustodyHistory(uint256 batchId) external view returns (CustodyRecord[] memory) {
+        return _custodyHistory[batchId];
     }
 }

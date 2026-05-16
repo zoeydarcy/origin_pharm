@@ -12,45 +12,86 @@ import "./BatchTypes.sol";
  *      Each batch gets a unique tokenId incremented from 1.
  *      The ControlContract reads from this contract to validate batches.
  */
+/**
+ * @title MintContract
+ * @notice Layer 1 of OriginPharm — participant registration and batch token creation.
+ *
+ * The Owner (OriginPharm / TGA equivalent) registers every supply chain participant
+ * with their verified wallet address and real-world name before any supply chain
+ * activity is possible. Participants cannot self-report their own name.
+ *
+ * When a new batch of medicine is produced, the manufacturer calls mintBatch().
+ * A unique batchId is assigned and the manufacturer's verified name is read
+ * automatically from the registry — it is never passed as a parameter.
+ *
+ * Only ControlContract can update batch state via onlyControlContract modifier.
+ * No external wallet can manipulate batch records directly.
+ *
+ * Deployment note:
+ *   1. Deploy MintContract
+ *   2. Deploy ControlContract with MintContract address
+ *   3. Call setControlContract() on MintContract with ControlContract address
+ */
 contract MintContract {
 
     // ─── State ────────────────────────────────────────────────────────────────
 
-    /// @notice Contract owner — set in constructor, used to authorise manufacturers
+    /// @notice Owner wallet — TGA / OriginPharm platform.
+    ///         Controls all participant registration. Has no supply chain write access.
     address public owner;
 
-    /// @notice Auto-incrementing ID counter for batch tokens
-    uint256 private _nextTokenId;
+    /// @notice Address of the deployed ControlContract.
+    ///         Set post-deployment via setControlContract(). Used for onlyControlContract.
+    address public controlContractAddress;
 
-    /// @notice Maps tokenId → BatchData
+    /// @notice Auto-incrementing batchId counter. Starts at 1.
+    uint256 private _nextBatchId;
+
+    /// @notice Maps batchId → BatchData for every minted batch.
     mapping(uint256 => BatchData) private _batches;
 
-    /// @notice Tracks which addresses are authorised manufacturers
-    mapping(address => bool) public authorisedManufacturers;
+    /// @notice Registry of authorised manufacturers.
+    ///         Stores owner-verified wallet address and real-world name.
+    mapping(address => VerifiedParty) public authorisedManufacturers;
 
     // ─── Events ───────────────────────────────────────────────────────────────
 
-    event ManufacturerAuthorised(address indexed manufacturer);
+    event ManufacturerAuthorised(address indexed manufacturer, string name);
     event ManufacturerRevoked(address indexed manufacturer);
+    event ControlContractSet(address indexed controlContract);
     event BatchMinted(
-        uint256 indexed tokenId,
+        uint256 indexed batchId,
         address indexed manufacturer,
-        string medicineName,
-        string batchNumber,
+        string  manufacturerName,
+        string  medicineName,
+        string  batchNumber,
         uint256 expiryDate
     );
+    event BatchVerified(uint256 indexed batchId);
 
     // ─── Modifiers ────────────────────────────────────────────────────────────
 
+    /// @notice Restricts function to the contract owner (TGA / OriginPharm).
     modifier onlyOwner() {
         require(msg.sender == owner, "MintContract: caller is not owner");
         _;
     }
 
+    /// @notice Restricts function to authorised manufacturers only.
     modifier onlyManufacturer() {
         require(
-            authorisedManufacturers[msg.sender],
+            authorisedManufacturers[msg.sender].isAuthorised,
             "MintContract: caller is not an authorised manufacturer"
+        );
+        _;
+    }
+
+    /// @notice Restricts function to ControlContract only.
+    ///         Prevents any external wallet from directly mutating batch state.
+    modifier onlyControlContract() {
+        require(
+            msg.sender == controlContractAddress,
+            "MintContract: caller is not the ControlContract"
         );
         _;
     }
@@ -59,94 +100,141 @@ contract MintContract {
 
     constructor() {
         owner = msg.sender;
-        _nextTokenId = 1; // Token IDs start at 1
+        _nextBatchId = 1;
     }
 
     // ─── Owner Functions ──────────────────────────────────────────────────────
 
     /**
-     * @notice Grants manufacturer role to an address.
-     * @param manufacturer Address to authorise.
+     * @notice Sets the ControlContract address after deployment.
+     *         Must be called once before any supply chain activity begins.
+     *         Enables the onlyControlContract modifier on updateStatus() and setVerified().
+     * @param _controlContractAddress Deployed address of ControlContract.
      */
-    function authoriseManufacturer(address manufacturer) external onlyOwner {
-        // TODO: add input validation (e.g. non-zero address check)
-        authorisedManufacturers[manufacturer] = true;
-        emit ManufacturerAuthorised(manufacturer);
+    function setControlContract(address _controlContractAddress) external onlyOwner {
+        require(_controlContractAddress != address(0), "MintContract: zero address");
+        controlContractAddress = _controlContractAddress;
+        emit ControlContractSet(_controlContractAddress);
     }
 
     /**
-     * @notice Revokes manufacturer role from an address.
-     * @param manufacturer Address to revoke.
+     * @notice Registers a manufacturer with their verified wallet address and real-world name.
+     *         Name is set by the Owner — the manufacturer cannot self-report their identity.
+     *         In practice, names are sourced from the TGA verified manufacturer database.
+     * @param manufacturer Wallet address of the manufacturer.
+     * @param name         Owner-verified real-world name e.g. "Pfizer Australia Pty Ltd".
+     */
+    function authoriseManufacturer(address manufacturer, string calldata name) external onlyOwner {
+        require(manufacturer != address(0), "MintContract: zero address");
+        require(bytes(name).length > 0, "MintContract: name cannot be empty");
+        authorisedManufacturers[manufacturer] = VerifiedParty({ isAuthorised: true, name: name });
+        emit ManufacturerAuthorised(manufacturer, name);
+    }
+
+    /**
+     * @notice Revokes a manufacturer's authorisation.
+     *         Revoked manufacturers can no longer call mintBatch().
+     * @param manufacturer Wallet address to revoke.
      */
     function revokeManufacturer(address manufacturer) external onlyOwner {
-        // TODO: check manufacturer is currently authorised before revoking
-        authorisedManufacturers[manufacturer] = false;
+        require(authorisedManufacturers[manufacturer].isAuthorised, "MintContract: not currently authorised");
+        authorisedManufacturers[manufacturer].isAuthorised = false;
         emit ManufacturerRevoked(manufacturer);
     }
 
     // ─── Manufacturer Functions ───────────────────────────────────────────────
 
     /**
-     * @notice Mints a new batch token representing a pharmaceutical product batch.
-     * @param medicineName  Human-readable name of the medicine.
-     * @param batchNumber   Manufacturer's internal batch reference.
-     * @param expiryDate    Unix timestamp of the batch expiry date.
-     * @return tokenId      The ID assigned to the newly minted batch.
+     * @notice Mints a batch token representing a newly produced pharmaceutical batch.
+     *         Called by the manufacturer when a physical batch of medicine is produced.
+     *         The manufacturer's verified name is read from the registry automatically —
+     *         they do not pass their own name as a parameter.
      *
-     * @dev TODO: Add validation:
-     *      - expiryDate must be in the future
-     *      - medicineName and batchNumber must not be empty strings
-     *      - Consider emitting a QR-code-friendly hash of the tokenId
+     * @param medicineName Human-readable name of the medicine e.g. "Amoxicillin 500mg".
+     * @param batchNumber  Manufacturer's internal batch reference e.g. "BATCH-001".
+     * @param expiryDate   Unix timestamp of the batch expiry date — must be in the future.
+     * @return batchId     The unique ID assigned to this batch. Travels on the packing slip.
      */
     function mintBatch(
         string calldata medicineName,
         string calldata batchNumber,
         uint256 expiryDate
-    ) external onlyManufacturer returns (uint256 tokenId) {
-        tokenId = _nextTokenId++;
+    ) external onlyManufacturer returns (uint256 batchId) {
+        require(bytes(medicineName).length > 0, "MintContract: medicineName cannot be empty");
+        require(bytes(batchNumber).length > 0,  "MintContract: batchNumber cannot be empty");
+        require(expiryDate > block.timestamp,   "MintContract: expiry date must be in the future");
 
-        _batches[tokenId] = BatchData({
-            tokenId:         tokenId,
-            medicineName:    medicineName,
-            batchNumber:     batchNumber,
-            manufactureDate: block.timestamp,
-            expiryDate:      expiryDate,
-            manufacturer:    msg.sender,
-            status:          BatchStatus.Produced
+        batchId = _nextBatchId++;
+
+        // Read manufacturer's verified name from the registry — never self-reported
+        string memory verifiedName = authorisedManufacturers[msg.sender].name;
+
+        _batches[batchId] = BatchData({
+            batchId:          batchId,
+            medicineName:     medicineName,
+            batchNumber:      batchNumber,
+            manufacturerName: verifiedName,
+            manufactureDate:  block.timestamp,
+            expiryDate:       expiryDate,
+            manufacturer:     msg.sender,
+            status:           BatchStatus.Produced,
+            verified:         false
         });
 
-        emit BatchMinted(tokenId, msg.sender, medicineName, batchNumber, expiryDate);
+        emit BatchMinted(batchId, msg.sender, verifiedName, medicineName, batchNumber, expiryDate);
+    }
+
+    // ─── ControlContract-Only Functions ──────────────────────────────────────
+
+    /**
+     * @notice Updates the status of a batch as it progresses through the supply chain.
+     *         Called by ControlContract only — no external wallet can change batch state.
+     * @param batchId   The batch to update.
+     * @param newStatus The new BatchStatus value.
+     */
+    function updateStatus(uint256 batchId, BatchStatus newStatus) external onlyControlContract {
+        require(batchExists(batchId), "MintContract: batch does not exist");
+        _batches[batchId].status = newStatus;
+    }
+
+    /**
+     * @notice Sets verified = true when receipt() closes the supply chain cycle.
+     *         Called by ControlContract only after the pharmacist confirms delivery.
+     *         Triggers the QR code generation event on the application layer.
+     * @param batchId The batch to mark as verified.
+     */
+    function setVerified(uint256 batchId) external onlyControlContract {
+        require(batchExists(batchId), "MintContract: batch does not exist");
+        _batches[batchId].verified = true;
+        emit BatchVerified(batchId);
     }
 
     // ─── Read Functions ───────────────────────────────────────────────────────
 
     /**
-     * @notice Returns the full BatchData struct for a given tokenId.
-     * @param tokenId The batch token to look up.
+     * @notice Returns the full BatchData struct for a given batchId.
+     *         Includes manufacturerName, verified flag, and current status.
+     * @param batchId The batch to look up.
      */
-    function getBatch(uint256 tokenId) external view returns (BatchData memory) {
-        // TODO: revert with a descriptive error if tokenId does not exist
-        return _batches[tokenId];
+    function getBatch(uint256 batchId) external view returns (BatchData memory) {
+        require(batchExists(batchId), "MintContract: batch does not exist");
+        return _batches[batchId];
     }
 
     /**
-     * @notice Returns true if a tokenId has been minted (exists in the registry).
-     * @param tokenId The batch token to check.
+     * @notice Returns true if a batchId has been minted.
+     * @param batchId The batch to check.
      */
-    function batchExists(uint256 tokenId) external view returns (bool) {
-        return _batches[tokenId].manufacturer != address(0);
+    function batchExists(uint256 batchId) public view returns (bool) {
+        return _batches[batchId].manufacturer != address(0);
     }
 
     /**
-     * @notice Allows the ControlContract to update the status of a batch.
-     * @param tokenId   The batch to update.
-     * @param newStatus The new BatchStatus value.
-     *
-     * @dev TODO: Restrict this so only the ControlContract address can call it.
-     *      One approach: store the ControlContract address in state and add a modifier.
+     * @notice Returns the verified name of a registered manufacturer.
+     *         Used by ControlContract to display manufacturer identity in custody records.
+     * @param manufacturer Wallet address of the manufacturer.
      */
-    function updateStatus(uint256 tokenId, BatchStatus newStatus) external {
-        // TODO: access control — only ControlContract should be able to call this
-        _batches[tokenId].status = newStatus;
+    function getManufacturerName(address manufacturer) external view returns (string memory) {
+        return authorisedManufacturers[manufacturer].name;
     }
 }
