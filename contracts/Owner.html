@@ -4,390 +4,363 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pharm_Origin (Owner)</title>
+    <title>Origin Pharm (Owner)</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background-color: #F0F4F8;
+            color: #1A2E44;
+            min-height: 100vh;
+        }
+
+        header {
+            background-color: #0B2D6E;
+            color: white;
+            padding: 18px 24px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 22px;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+        }
+
+        header p {
+            font-size: 13px;
+            color: #A8C4E0;
+            margin-top: 4px;
+        }
+
+        .container {
+            max-width: 720px;
+            margin: 36px auto;
+            padding: 0 20px 60px;
+        }
+
+        .section-label {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+            color: #6B82A0;
+            margin: 28px 0 10px;
+        }
+
+        .card {
+            background: #FFFFFF;
+            border: 1px solid #D6E0EF;
+            border-radius: 8px;
+            padding: 20px 22px;
+            margin-bottom: 12px;
+        }
+
+        .card h3 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #0B2D6E;
+            margin-bottom: 14px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #EAF0F8;
+        }
+
+        label {
+            display: block;
+            font-size: 12px;
+            font-weight: 500;
+            color: #6B82A0;
+            margin-bottom: 4px;
+            margin-top: 10px;
+        }
+
+        input[type="text"],
+        input[type="number"] {
+            width: 100%;
+            padding: 9px 11px;
+            border: 1px solid #D6E0EF;
+            border-radius: 5px;
+            font-size: 13px;
+            font-family: inherit;
+            background: #F8FAFD;
+            color: #1A2E44;
+        }
+
+        input[type="text"]:focus,
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #2E6EE1;
+            background: #fff;
+        }
+
+        button {
+            margin-top: 12px;
+            padding: 9px 20px;
+            background-color: #1553B6;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 13px;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        button:hover {
+            background-color: #2E6EE1;
+        }
+
+        button.revoke {
+            background-color: #EAF0F8;
+            color: #C0392B;
+        }
+
+        button.revoke:hover {
+            background-color: #FDECEA;
+        }
+
+        button.Find {
+            background-color: #eaedf8;
+            color: #2bc041;
+        }
+
+        button.Find:hover {
+            background-color: #eafdf0;
+        }
+
+        hr {
+            border: none;
+            border-top: 1px solid #EAF0F8;
+            margin: 16px 0;
+        }
+    </style>
 </head>
 
 <body>
-    <h1>Pharm_Origin (Owner)</h1>
 
-    <h3 style="margin-bottom: 0px;">Authorise Manufacturer</h3>
-    <label for="productName">Address:</label>
-    <input type="text" id="productName" placeholder="Enter Address">
-    <label for="origin">Name:</label>
-    <input type="text" id="origin" placeholder="Enter Name">
-    <button onclick="createProduct()">Authorise</button>
+    <header>
+        <h1>Origin Pharm</h1>
+        <p>Owner Portal — Participant Registration</p>
+    </header>
 
-    <h3 style="margin-bottom: 0px;">Revoke Manufacturer</h3>
-    <label for="productName">Address:</label>
-    <input type="text" id="productName" placeholder="Enter Address">
-    <button onclick="createProduct()">Revoke</button>
+    <div class="container">
 
-    <h3 style="margin-bottom: 0px;">Get Manufacturer Name</h3>
-    <label for="productName">Address:</label>
-    <input type="text" id="productName" placeholder="Enter Address">
-    <button onclick="createProduct()">Find</button>
+        <!-- SYSTEM SETUP -->
+        <div class="section-label">System Setup</div>
+        <div class="card">
+            <h3>Set Control Contract</h3>
+            <label for="controlContractAddr">ControlContract Address</label>
+            <input type="text" id="controlContractAddr" placeholder="0x...">
+            <button onclick="setControlContract()">Wire Up</button>
+        </div>
 
-    <hr>
+        <!-- MANUFACTURERS -->
+        <div class="section-label">Manufacturers</div>
+        <div class="card">
+            <h3>Authorise Manufacturer</h3>
+            <label for="mfrAddress">Wallet Address</label>
+            <input type="text" id="mfrAddress" placeholder="0x...">
+            <label for="mfrName">Verified Name</label>
+            <input type="text" id="mfrName" placeholder="e.g. Pfizer Australia Pty Ltd">
+            <button onclick="authoriseManufacturer()">Authorise</button>
+            <hr>
+            <h3>Revoke Manufacturer</h3>
+            <label for="mfrRevokeAddress">Wallet Address</label>
+            <input type="text" id="mfrRevokeAddress" placeholder="0x...">
+            <button class="revoke" onclick="revokeManufacturer()">Revoke</button>
+            <hr>
+            <h3>Get Manufacturer Name</h3>
+            <label for="mfrFindAddress">Wallet Address</label>
+            <input type="text" id="mfrFindAddress" placeholder="0x...">
+            <button class="Find" onclick="authorisedManufacturers()">Search</button>
+            <div id="ManufacturerInfo"></div>
+        </div>
 
-    <h3 style="margin-bottom: 0px;">Authorise Distributor</h3>
-    <label for="productName">Address:</label>
-    <input type="text" id="productName" placeholder="Enter Address">
-    <label for="origin">Name:</label>
-    <input type="text" id="origin" placeholder="Enter Name">
-    <button onclick="createProduct()">Authorise</button>
+        <!-- DISTRIBUTORS -->
+        <div class="section-label">Distributors</div>
+        <div class="card">
+            <h3>Authorise Distributor</h3>
+            <label for="distAddress">Wallet Address</label>
+            <input type="text" id="distAddress" placeholder="0x...">
+            <label for="distName">Verified Name</label>
+            <input type="text" id="distName" placeholder="e.g. AusPost Logistics">
+            <button onclick="authoriseDistributor()">Authorise</button>
+            <hr>
+            <h3>Revoke Distributor</h3>
+            <label for="distRevokeAddress">Wallet Address</label>
+            <input type="text" id="distRevokeAddress" placeholder="0x...">
+            <button class="revoke" onclick="revokeDistributor()">Revoke</button>
+            <hr>
+            <h3>Get Distributor Name</h3>
+            <label for="distFindAddress">Wallet Address</label>
+            <input type="text" id="distFindAddress" placeholder="0x...">
+            <button class="Find" onclick="authorisedDistributors()">Search</button>
+            <div id="DistributorInfo"></div>
+        </div>
 
-    <h3 style="margin-bottom: 0px;">Revoke Distributor</h3>
-    <label for="productName">Address:</label>
-    <input type="text" id="productName" placeholder="Enter Address">
-    <button onclick="createProduct()">Revoke</button>
+        <!-- PHARMACIES -->
+        <div class="section-label">Pharmacies</div>
+        <div class="card">
+            <h3>Authorise Pharmacy</h3>
+            <label for="phAddress">Wallet Address</label>
+            <input type="text" id="phAddress" placeholder="0x...">
+            <label for="phName">Verified Name</label>
+            <input type="text" id="phName" placeholder="e.g. Terry White — George St">
+            <button onclick="authorisePharmacy()">Authorise</button>
+            <hr>
+            <h3>Revoke Pharmacy</h3>
+            <label for="phRevokeAddress">Wallet Address</label>
+            <input type="text" id="phRevokeAddress" placeholder="0x...">
+            <button class="revoke" onclick="revokePharmacy()">Revoke</button>
+            <hr>
+            <h3>Get Pharmacy Name</h3>
+            <label for="phFindAddress">Wallet Address</label>
+            <input type="text" id="phFindAddress" placeholder="0x...">
+            <button class="Find" onclick="authorisedPharmacies()">Search</button>
+            <div id="PharmacyInfo"></div>
+        </div>
 
-    <h3 style="margin-bottom: 0px;">Get Distributor Name</h3>
-    <label for="productName">Address:</label>
-    <input type="text" id="productName" placeholder="Enter Address">
-    <button onclick="createProduct()">Find</button>
-
-    <hr>
-
-    <h3 style="margin-bottom: 0px;">Authorise Pharmacy</h3>
-    <label for="productName">Address:</label>
-    <input type="text" id="productName" placeholder="Enter Address">
-    <label for="origin">Name:</label>
-    <input type="text" id="origin" placeholder="Enter Name">
-    <button onclick="createProduct()">Authorise</button>
-
-    <h3 style="margin-bottom: 0px;">Revoke Pharmacy</h3>
-    <label for="productName">Address:</label>
-    <input type="text" id="productName" placeholder="Enter Address">
-    <button onclick="createProduct()">Revoke</button>
-
-    <h3 style="margin-bottom: 0px;">Get Pharmacy Name</h3>
-    <label for="productName">Address:</label>
-    <input type="text" id="productName" placeholder="Enter Address">
-    <button onclick="createProduct()">Find</button>
-
-    <hr>
-
-    <button onclick="viewProductHistory()">View Product History</button>
-
-    <div id="productDetails"></div>
-    <div id="productHistory"></div>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/web3@1.3.6/dist/web3.min.js"></script>
 
     <script>
-
-        // Example initialization of web3
         var web3;
 
         if (typeof window.ethereum !== 'undefined') {
-            // Modern dapp browsers
             web3 = new Web3(window.ethereum);
             window.ethereum.enable()
                 .then(function (accounts) {
-                    // Set default account after enabling Ethereum
                     web3.eth.defaultAccount = accounts[0];
                     console.log("Default account set:", web3.eth.defaultAccount);
-
-                    // Now you can access web3.eth
-                    // For example:
-                    web3.eth.getAccounts()
-                        .then(function (accounts) {
-                            console.log(accounts);
-                        })
-                        .catch(function (error) {
-                            console.error(error);
-                        });
                 })
-                .catch(function (error) {
-                    console.error(error);
-                });
+                .catch(function (error) { console.error(error); });
         } else if (typeof window.web3 !== 'undefined') {
-            // Legacy dapp browsers
             web3 = new Web3(window.web3.currentProvider);
         } else {
-            // Non-dapp browsers
-            console.log('Non-Ethereum browser detected. You should consider trying MetaMask!');
+            console.log('Non-Ethereum browser detected. Please install MetaMask.');
         }
 
-        // Accessing the 'eth' property
-        if (web3 && web3.eth) {
-            // Now you can safely access web3.eth
-            // For example:
-            web3.eth.getAccounts()
-                .then(function (accounts) {
-                    console.log(accounts);
-                })
-                .catch(function (error) {
-                    console.error(error);
-                });
-        } else {
-            console.error('web3 or web3.eth is undefined.');
-        }
+        // ── UPDATE THESE ADDRESSES AFTER REMIX DEPLOYMENT ──────────────────
+        const mintContractAddress = '0x0C0f39BC69636C3B7550D4A978400F51A3Fb6c6a';
+        const controlContractAddress = '0x5f0402c4D184469B269A9C94c40E466Ba21E16C5';
 
-        // Function to create a product
-        async function createProduct() {
-            const productName = document.getElementById('productName').value;
-            const origin = document.getElementById('origin').value;
-
-            // Check if default account is set
-            if (!web3.eth.defaultAccount) {
-                console.error("Default account not set.");
-                return;
-            }
-
-            // Ensure default account is properly set before sending transaction
-            await web3.eth.sendTransaction({
-                from: web3.eth.defaultAccount,
-                to: contractAddress,
-                data: foodSupplyChainContract.methods.createProduct(productName, origin).encodeABI()
-            })
-                .on('transactionHash', function (hash) {
-                    console.log("Transaction Hash:", hash);
-                })
-                .on('confirmation', function (confirmationNumber, receipt) {
-                    console.log("Confirmation Number:", confirmationNumber);
-                    console.log("Receipt:", receipt);
-                })
-                .catch(function (error) {
-                    console.error("Error creating product:", error);
-                });
-
-            alert('Product created successfully!');
-        }
-
-
-
-        const contractAddress = '0xcB21e2c9F4fd5Af4D6471Fdcd05943594D58BFBD';
-        const contractABI = [
-            {
-                "inputs": [
-                    {
-                        "internalType": "string",
-                        "name": "_productName",
-                        "type": "string"
-                    },
-                    {
-                        "internalType": "string",
-                        "name": "_origin",
-                        "type": "string"
-                    }
-                ],
-                "name": "createProduct",
-                "outputs": [],
-                "stateMutability": "nonpayable",
-                "type": "function"
-            },
-            {
-                "inputs": [],
-                "stateMutability": "nonpayable",
-                "type": "constructor"
-            },
-            {
-                "anonymous": false,
-                "inputs": [
-                    {
-                        "indexed": false,
-                        "internalType": "uint256",
-                        "name": "productId",
-                        "type": "uint256"
-                    },
-                    {
-                        "indexed": false,
-                        "internalType": "string",
-                        "name": "productName",
-                        "type": "string"
-                    },
-                    {
-                        "indexed": false,
-                        "internalType": "address",
-                        "name": "producer",
-                        "type": "address"
-                    },
-                    {
-                        "indexed": false,
-                        "internalType": "string",
-                        "name": "origin",
-                        "type": "string"
-                    },
-                    {
-                        "indexed": false,
-                        "internalType": "uint256",
-                        "name": "timestamp",
-                        "type": "uint256"
-                    }
-                ],
-                "name": "ProductCreated",
-                "type": "event"
-            },
-            {
-                "inputs": [
-                    {
-                        "internalType": "uint256",
-                        "name": "_productId",
-                        "type": "uint256"
-                    }
-                ],
-                "name": "getProductDetails",
-                "outputs": [
-                    {
-                        "internalType": "string",
-                        "name": "",
-                        "type": "string"
-                    },
-                    {
-                        "internalType": "address",
-                        "name": "",
-                        "type": "address"
-                    },
-                    {
-                        "internalType": "string",
-                        "name": "",
-                        "type": "string"
-                    },
-                    {
-                        "internalType": "uint256",
-                        "name": "",
-                        "type": "uint256"
-                    }
-                ],
-                "stateMutability": "view",
-                "type": "function"
-            },
-            {
-                "inputs": [],
-                "name": "owner",
-                "outputs": [
-                    {
-                        "internalType": "address",
-                        "name": "",
-                        "type": "address"
-                    }
-                ],
-                "stateMutability": "view",
-                "type": "function"
-            },
-            {
-                "inputs": [],
-                "name": "productCount",
-                "outputs": [
-                    {
-                        "internalType": "uint256",
-                        "name": "",
-                        "type": "uint256"
-                    }
-                ],
-                "stateMutability": "view",
-                "type": "function"
-            },
-            {
-                "inputs": [
-                    {
-                        "internalType": "uint256",
-                        "name": "",
-                        "type": "uint256"
-                    }
-                ],
-                "name": "products",
-                "outputs": [
-                    {
-                        "internalType": "string",
-                        "name": "productName",
-                        "type": "string"
-                    },
-                    {
-                        "internalType": "address",
-                        "name": "producer",
-                        "type": "address"
-                    },
-                    {
-                        "internalType": "string",
-                        "name": "origin",
-                        "type": "string"
-                    },
-                    {
-                        "internalType": "uint256",
-                        "name": "timestamp",
-                        "type": "uint256"
-                    }
-                ],
-                "stateMutability": "view",
-                "type": "function"
-            }
+        const mintContractABI = [
+            // setControlContract
+            { "inputs": [{ "internalType": "address", "name": "_controlContractAddress", "type": "address" }], "name": "setControlContract", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
+            // Authorise Manufacturer
+            { "inputs": [{ "internalType": "address", "name": "manufacturer", "type": "address" }, { "internalType": "string", "name": "name", "type": "string" }], "name": "authoriseManufacturer", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
+            // Revoke Manufacturer
+            { "inputs": [{ "internalType": "address", "name": "manufacturer", "type": "address" }], "name": "revokeManufacturer", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
+            // Get Manufacturer Name
+            { "inputs": [{ "internalType": "address", "name": "", "type": "address" }], "name": "authorisedManufacturers", "outputs": [{ "internalType": "bool", "name": "isAuthorised", "type": "bool" }, { "internalType": "string", "name": "name", "type": "string" }], "stateMutability": "view", "type": "function" }
         ];
 
-        const foodSupplyChainContract = new web3.eth.Contract(contractABI, contractAddress);
+        const controlContractABI = [
+            // Authorise Distributor
+            { "inputs": [{ "internalType": "address", "name": "distributor", "type": "address" }, { "internalType": "string", "name": "name", "type": "string" }], "name": "authoriseDistributor", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
+            // Revoke Distributor
+            { "inputs": [{ "internalType": "address", "name": "distributor", "type": "address" }], "name": "revokeDistributor", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
+            // Get Distributor Name
+            { "inputs": [{ "internalType": "address", "name": "", "type": "address" }], "name": "authorisedDistributors", "outputs": [{ "internalType": "bool", "name": "isAuthorised", "type": "bool" }, { "internalType": "string", "name": "name", "type": "string" }], "stateMutability": "view", "type": "function" },
+            // Authorise Pharmacy
+            { "inputs": [{ "internalType": "address", "name": "pharmacy", "type": "address" }, { "internalType": "string", "name": "name", "type": "string" }], "name": "authorisePharmacy", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
+            // Revoke Pharmacy
+            { "inputs": [{ "internalType": "address", "name": "pharmacy", "type": "address" }], "name": "revokePharmacy", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
+            // Get Pharmacy Name
+            { "inputs": [{ "internalType": "address", "name": "", "type": "address" }], "name": "authorisedPharmacies", "outputs": [{ "internalType": "bool", "name": "isAuthorised", "type": "bool" }, { "internalType": "string", "name": "name", "type": "string" }], "stateMutability": "view", "type": "function" }
+        ];
 
-        async function createProduct() {
-            const productName = document.getElementById('productName').value;
-            const origin = document.getElementById('origin').value;
+        const mintContract = new web3.eth.Contract(mintContractABI, mintContractAddress);
+        const controlContract = new web3.eth.Contract(controlContractABI, controlContractAddress);
 
-            await foodSupplyChainContract.methods.createProduct(productName, origin).send({ from: web3.eth.defaultAccount })
-                .on('transactionHash', function (hash) {
-                    console.log("Transaction Hash:", hash);
-                })
-                .on('confirmation', function (confirmationNumber, receipt) {
-                    console.log("Confirmation Number:", confirmationNumber);
-                    console.log("Receipt:", receipt);
-                });
-
-            alert('Product created successfully!');
+        async function setControlContract() {
+            const addr = document.getElementById('controlContractAddr').value;
+            await mintContract.methods.setControlContract(addr)
+                .send({ from: web3.eth.defaultAccount })
+                .on('transactionHash', function (hash) { console.log('TX Hash:', hash); })
+                .on('confirmation', function (num, receipt) { console.log('Confirmed:', receipt); });
+            alert('ControlContract wired successfully!');
         }
 
-        async function getProductDetails() {
-            const productId = document.getElementById('productId').value;
-            const result = await foodSupplyChainContract.methods.getProductDetails(productId).call();
-
-            const productName = result[0];
-            const producer = result[1];
-            const origin = result[2];
-            const timestamp = result[3];
-
-            const productDetailsDiv = document.getElementById('productDetails');
-            productDetailsDiv.innerHTML = `
-            <p><strong>Product Name:</strong> ${productName}</p>
-            <p><strong>Producer:</strong> ${producer}</p>
-            <p><strong>Origin:</strong> ${origin}</p>
-            <p><strong>Timestamp:</strong> ${new Date(timestamp * 1000)}</p>
-        `;
+        // Manufacturers
+        async function authoriseManufacturer() {
+            const address = document.getElementById('mfrAddress').value;
+            const name = document.getElementById('mfrName').value;
+            await mintContract.methods.authoriseManufacturer(address, name).send({ from: web3.eth.defaultAccount }).on('transactionHash', function (hash) { console.log('TX Hash:', hash); });
+            alert('Manufacturer authorised: ' + name);
+        }
+        async function revokeManufacturer() {
+            const address = document.getElementById('mfrRevokeAddress').value;
+            await mintContract.methods.revokeManufacturer(address).send({ from: web3.eth.defaultAccount }).on('transactionHash', function (hash) { console.log('TX Hash:', hash); });
+            alert('Manufacturer revoked.');
+        }
+        async function authorisedManufacturers() {
+            const address = document.getElementById('mfrFindAddress').value;
+            const result = await mintContract.methods.authorisedManufacturers(address).call();
+            const IsAuth = result[0];
+            const Name = result[1];
+            const ManufacturerInfoDiv = document.getElementById('ManufacturerInfo');
+            ManufacturerInfoDiv.innerHTML = `
+            <p><strong>Is Authorised:</strong> ${IsAuth}</p>
+            <p><strong>Name:</strong> ${Name}</p>`;
         }
 
+        // Distributors
+        async function authoriseDistributor() {
+            const address = document.getElementById('distAddress').value;
+            const name = document.getElementById('distName').value;
+            await controlContract.methods.authoriseDistributor(address, name).send({ from: web3.eth.defaultAccount }).on('transactionHash', function (hash) { console.log('TX Hash:', hash); });
+            alert('Distributor authorised: ' + name);
+        }
+        async function revokeDistributor() {
+            const address = document.getElementById('distRevokeAddress').value;
+            await controlContract.methods.revokeDistributor(address).send({ from: web3.eth.defaultAccount }).on('transactionHash', function (hash) { console.log('TX Hash:', hash); });
+            alert('Distributor revoked.');
+        }
+        async function authorisedDistributors() {
+            const address = document.getElementById('distFindAddress').value;
+            const result = await controlContract.methods.authorisedDistributors(address).call();
+            const IsAuth = result[0];
+            const Name = result[1];
+            const DistributorInfoDiv = document.getElementById('DistributorInfo');
+            DistributorInfoDiv.innerHTML = `
+            <p><strong>Is Authorised:</strong> ${IsAuth}</p>
+            <p><strong>Name:</strong> ${Name}</p>`;
+        }
 
-        async function viewProductHistory() {
-            const productId = document.getElementById('productId').value;
-            const productHistoryDiv = document.getElementById('productHistory');
-
-            try {
-                const productHistory = await foodSupplyChainContract.getPastEvents('ProductCreated', {
-                    filter: { productId },
-                    fromBlock: 0,
-                    toBlock: 'latest'
-                });
-
-                productHistoryDiv.innerHTML = "<h3>Product History</h3>";
-
-                if (productHistory.length === 0) {
-                    productHistoryDiv.innerHTML += "<p>No history available for this product.</p>";
-                    return;
-                }
-
-                productHistory.forEach(event => {
-                    const { productId, productName, producer, origin, timestamp } = event.returnValues;
-
-                    productHistoryDiv.innerHTML += `
-                            <p><strong>Product ID:</strong> ${productId}</p>
-                            <p><strong>Product Name:</strong> ${productName}</p>
-                            <p><strong>Producer:</strong> ${producer}</p>
-                            <p><strong>Origin:</strong> ${origin}</p>
-                            <p><strong>Timestamp:</strong> ${new Date(timestamp * 1000)}</p>
-                            <hr>
-                        `;
-                });
-            } catch (error) {
-                console.error('Error fetching product history:', error);
-                productHistoryDiv.innerHTML = "<p>Error fetching product history. Please try again.</p>";
-            }
+        // Pharmacies
+        async function authorisePharmacy() {
+            const address = document.getElementById('phAddress').value;
+            const name = document.getElementById('phName').value;
+            await controlContract.methods.authorisePharmacy(address, name).send({ from: web3.eth.defaultAccount }).on('transactionHash', function (hash) { console.log('TX Hash:', hash); });
+            alert('Pharmacy authorised: ' + name);
+        }
+        async function revokePharmacy() {
+            const address = document.getElementById('phRevokeAddress').value;
+            await controlContract.methods.revokePharmacy(address).send({ from: web3.eth.defaultAccount }).on('transactionHash', function (hash) { console.log('TX Hash:', hash); });
+            alert('Pharmacy revoked.');
+        }
+        async function authorisedPharmacies() {
+            const address = document.getElementById('phFindAddress').value;
+            const result = await controlContract.methods.authorisedPharmacies(address).call();
+            const IsAuth = result[0];
+            const Name = result[1];
+            const PharmacyInfoDiv = document.getElementById('PharmacyInfo');
+            PharmacyInfoDiv.innerHTML = `
+            <p><strong>Is Authorised:</strong> ${IsAuth}</p>
+            <p><strong>Name:</strong> ${Name}</p>`;
         }
     </script>
+
 </body>
 
 </html>
+Owner (5).html
+13 KB
