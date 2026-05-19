@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Origin Pharm (Pharmacy)</title>
+    <title>Origin Pharm (Consumer / Auditor)</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -57,6 +57,16 @@
             border-bottom: 1px solid #EAF0F8;
         }
 
+        .info-note {
+            background: #EBF2FF;
+            border: 1px solid #D6E0EF;
+            border-radius: 5px;
+            padding: 12px 14px;
+            font-size: 13px;
+            color: #1553B6;
+            margin-bottom: 20px;
+        }
+
         label {
             display: block;
             font-size: 12px;
@@ -66,7 +76,6 @@
             margin-top: 10px;
         }
 
-        input[type="text"],
         input[type="number"] {
             width: 100%;
             padding: 9px 11px;
@@ -100,13 +109,6 @@
 
         button:hover { background-color: #2E6EE1; }
 
-        button.confirm { background-color: #0A7A4C; }
-        button.confirm:hover { background-color: #076040; }
-
-        button.print-btn { background-color: #0B2D6E; margin-top: 10px; }
-        button.print-btn:hover { background-color: #1553B6; }
-
-        /* Batch status result */
         #batchStatusResult {
             display: none;
             margin-top: 14px;
@@ -144,28 +146,6 @@
             font-weight: 700;
         }
 
-        /* QR section */
-        #qrSection {
-            display: none;
-            margin-top: 14px;
-            padding: 20px;
-            background: #F8FAFD;
-            border: 1px dashed #D6E0EF;
-            border-radius: 6px;
-            text-align: center;
-        }
-
-        #qrSection p {
-            font-size: 13px;
-            color: #1553B6;
-            font-weight: 600;
-            margin-bottom: 12px;
-        }
-
-        #qrCode { margin: 0 auto 12px; display: inline-block; }
-
-        #productDetails { margin-top: 12px; font-size: 13px; color: #6B82A0; }
-
         .trail-item {
             background: #EBF2FF;
             border-radius: 5px;
@@ -181,44 +161,30 @@
 
     <header>
         <h1>Origin Pharm</h1>
-        <p>Pharmacy Portal</p>
+        <p>Consumer / Regulatory Authority — Batch Verification</p>
     </header>
 
     <div class="container">
 
-        <!-- STEP 1: SEARCH BATCH -->
-        <div class="section-label">Step 1 — Search Batch</div>
-        <div class="card">
-            <h3>Search Batch</h3>
-            <label for="searchBatchId">Batch ID</label>
-            <input type="number" id="searchBatchId" placeholder="Enter Batch ID from packing slip">
-            <button onclick="searchBatch()">Search Batch</button>
-            <div id="batchStatusResult"></div>
+        <div class="info-note">
+            Scan the QR code on your medication box to get the Batch ID, or enter it manually below to verify the medicine's authenticity and full supply chain history.
         </div>
 
-        <!-- STEP 2: CONFIRM RECEIPT -->
-        <div class="section-label">Step 2 — Confirm Receipt</div>
+        <div class="section-label">Verify Batch</div>
         <div class="card">
-            <h3>Receipt</h3>
-            <label for="receiptBatchId">Batch ID</label>
-            <input type="number" id="receiptBatchId" placeholder="e.g. 1">
-            <button class="confirm" onclick="confirmReceipt()">Receipt Batch</button>
-            <div id="productDetails"></div>
-            <div id="qrSection">
-                <p>✓ Cycle Complete — QR Code Ready to Print</p>
-                <div id="qrCode"></div>
-                <button class="print-btn" onclick="printQR()">🖨 Print QR Code</button>
-            </div>
+            <h3>Batch Status</h3>
+            <label for="batchId">Batch ID</label>
+            <input type="number" id="batchId" placeholder="Enter Batch ID from QR code">
+            <button onclick="getBatchStatus()">Verify Batch</button>
+            <div id="batchStatusResult"></div>
         </div>
 
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/web3@1.3.6/dist/web3.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
     <script>
         var web3;
-        var currentBatchId = null;
 
         if (typeof window.ethereum !== 'undefined') {
             web3 = new Web3(window.ethereum);
@@ -237,27 +203,19 @@
             console.log('Non-Ethereum browser detected. Please install MetaMask.');
         }
 
-        // ── UPDATE THESE ADDRESSES AFTER REMIX DEPLOYMENT ──────────────────
-        const controlContractAddress      = 'PASTE_CONTROL_CONTRACT_ADDRESS_HERE';
+        // ── UPDATE THIS ADDRESS AFTER REMIX DEPLOYMENT ──────────────────────
         const verificationContractAddress = 'PASTE_VERIFICATION_CONTRACT_ADDRESS_HERE';
-
-        const controlContractABI = [
-            {"inputs":[{"internalType":"uint256","name":"batchId","type":"uint256"}],"name":"receipt","outputs":[],"stateMutability":"nonpayable","type":"function"}
-        ];
 
         const verificationContractABI = [
             {"inputs":[{"internalType":"uint256","name":"batchId","type":"uint256"}],"name":"batchStatus","outputs":[{"internalType":"string","name":"medicineName","type":"string"},{"internalType":"string","name":"batchNumber","type":"string"},{"internalType":"string","name":"manufacturerName","type":"string"},{"internalType":"address","name":"manufacturer","type":"address"},{"internalType":"uint256","name":"manufactureDate","type":"uint256"},{"internalType":"uint256","name":"expiryDate","type":"uint256"},{"internalType":"string","name":"status","type":"string"},{"internalType":"bool","name":"verified","type":"bool"},{"internalType":"address","name":"currentOwner","type":"address"},{"components":[{"internalType":"address","name":"from","type":"address"},{"internalType":"address","name":"to","type":"address"},{"internalType":"uint8","name":"status","type":"uint8"},{"internalType":"uint256","name":"timestamp","type":"uint256"},{"internalType":"string","name":"notes","type":"string"}],"internalType":"struct CustodyRecord[]","name":"custodyTrail","type":"tuple[]"}],"stateMutability":"view","type":"function"}
         ];
 
-        const controlContract      = new web3.eth.Contract(controlContractABI,      controlContractAddress);
         const verificationContract = new web3.eth.Contract(verificationContractABI, verificationContractAddress);
 
         const statusLabels = ['Produced', 'Released', 'InTransit', 'Received'];
 
-        async function searchBatch() {
-            const batchId = document.getElementById('searchBatchId').value;
-            currentBatchId = batchId;
-            document.getElementById('receiptBatchId').value = batchId;
+        async function getBatchStatus() {
+            const batchId = document.getElementById('batchId').value;
 
             const result = await verificationContract.methods.batchStatus(batchId).call();
 
@@ -280,7 +238,7 @@
             custodyTrail.forEach(function(rec, i) {
                 const recStatus = statusLabels[rec.status] || rec.status;
                 const ts = new Date(rec.timestamp * 1000).toLocaleDateString('en-AU');
-                trailHTML += `<div class="trail-item"><strong>${i+1}. ${recStatus}</strong> &mdash; ${rec.from.slice(0,6)}...${rec.from.slice(-4)} → ${rec.to.slice(0,6)}...${rec.to.slice(-4)} &nbsp;·&nbsp; ${ts}${rec.notes ? ' · ' + rec.notes : ''}</div>`;
+                trailHTML += `<div class="trail-item"><strong>${i+1}. ${recStatus}</strong> — ${rec.from.slice(0,6)}...${rec.from.slice(-4)} → ${rec.to.slice(0,6)}...${rec.to.slice(-4)} &nbsp;·&nbsp; ${ts}${rec.notes ? ' · ' + rec.notes : ''}</div>`;
             });
 
             const resultDiv = document.getElementById('batchStatusResult');
@@ -300,59 +258,15 @@
             `;
         }
 
-        async function confirmReceipt() {
-            const batchId = document.getElementById('receiptBatchId').value;
-            currentBatchId = batchId;
-
-            await controlContract.methods.receipt(batchId)
-                .send({ from: web3.eth.defaultAccount })
-                .on('transactionHash', function(hash) {
-                    console.log('Transaction Hash:', hash);
-                })
-                .on('confirmation', function(confirmationNumber, receipt) {
-                    console.log('Confirmation Number:', confirmationNumber);
-                    console.log('Receipt:', receipt);
-                })
-                .catch(function(error) { console.error('Error confirming receipt:', error); });
-
-            document.getElementById('productDetails').textContent = 'Batch ' + batchId + ' received. Status → Received. verified = true.';
-
-            // Generate QR code
-            generateQR(batchId);
-        }
-
-        function generateQR(batchId) {
-            var qrDiv = document.getElementById('qrCode');
-            qrDiv.innerHTML = '';
-            new QRCode(qrDiv, {
-                text: 'originpharm://batch/' + batchId,
-                width: 160,
-                height: 160,
-                colorDark: '#0B2D6E',
-                colorLight: '#FFFFFF',
-                correctLevel: QRCode.CorrectLevel.H
-            });
-            document.getElementById('qrSection').style.display = 'block';
-        }
-
-        function printQR() {
-            var qrDiv  = document.getElementById('qrCode');
-            var canvas = qrDiv.querySelector('canvas');
-            var img    = canvas ? canvas.toDataURL() : '';
-            var win    = window.open('', '_blank');
-            win.document.write(
-                '<html><head><title>Origin Pharm QR Code</title>' +
-                '<style>body{font-family:Arial,sans-serif;text-align:center;padding:40px;}h2{color:#0B2D6E;}p{color:#6B82A0;font-size:13px;margin-top:8px;}</style>' +
-                '</head><body>' +
-                '<h2>Origin Pharm — Verified Batch</h2>' +
-                '<img src="' + img + '" width="180" height="180" />' +
-                '<p>Batch ID: ' + currentBatchId + '</p>' +
-                '<p>Scan to verify via Origin Pharm</p>' +
-                '<script>window.print();<\/script>' +
-                '</body></html>'
-            );
-            win.document.close();
-        }
+        // Auto-load if batchId passed in URL e.g. Consumer.html?batch=1
+        window.addEventListener('load', function() {
+            var params  = new URLSearchParams(window.location.search);
+            var batchId = params.get('batch');
+            if (batchId) {
+                document.getElementById('batchId').value = batchId;
+                getBatchStatus();
+            }
+        });
     </script>
 
 </body>
