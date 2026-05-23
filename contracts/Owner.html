@@ -133,6 +133,32 @@
             border-top: 1px solid #EAF0F8;
             margin: 16px 0;
         }
+
+        #lookupResult {
+            display: none;
+            margin-top: 12px;
+            padding: 12px 14px;
+            background: #F8FAFD;
+            border: 1px solid #D6E0EF;
+            border-radius: 5px;
+            font-size: 13px;
+        }
+
+        #lookupResult p {
+            margin-bottom: 6px;
+            color: #1A2E44;
+        }
+
+        #lookupResult p strong {
+            color: #0B2D6E;
+        }
+
+        #lookupResult .address-mono {
+            font-family: monospace;
+            font-size: 12px;
+            color: #1553B6;
+            word-break: break-all;
+        }
     </style>
 </head>
 
@@ -203,6 +229,16 @@
             <button class="revoke" onclick="revokePharmacy()">Revoke</button>
         </div>
 
+        <!-- LOOKUP ADDRESSES -->
+        <div class="section-label">Participant Lookup</div>
+        <div class="card">
+            <h3>Get Manufacturer Address</h3>
+            <label for="lookupBatchId">Batch ID</label>
+            <input type="number" id="lookupBatchId" placeholder="e.g. 1">
+            <button onclick="getManufacturerAddress()">Lookup</button>
+            <div id="lookupResult"></div>
+        </div>
+
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/web3@1.3.6/dist/web3.min.js"></script>
@@ -241,8 +277,154 @@
             {"inputs":[{"internalType":"address","name":"pharmacy","type":"address"}],"name":"revokePharmacy","outputs":[],"stateMutability":"nonpayable","type":"function"}
         ];
 
-        const mintContract    = new web3.eth.Contract(mintContractABI,    mintContractAddress);
+        const mintContract = new web3.eth.Contract(mintContractABI,    mintContractAddress);
         const controlContract = new web3.eth.Contract(controlContractABI, controlContractAddress);
+
+    const verificationContractAddress = 'PASTE_VERIFICATION_CONTRACT_ADDRESS_HERE';
+
+    const verificationContractABI = [
+    [
+        {
+            "inputs": [
+                {
+                    "internalType": "address",
+                    "name": "mintContractAddress",
+                    "type": "address"
+                },
+                {
+                    "internalType": "address",
+                    "name": "controlContractAddress",
+                    "type": "address"
+                }
+            ],
+            "stateMutability": "nonpayable",
+            "type": "constructor"
+        },
+        {
+            "inputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "batchId",
+                    "type": "uint256"
+                }
+            ],
+            "name": "batchStatus",
+            "outputs": [
+                {
+                    "internalType": "string",
+                    "name": "medicineName",
+                    "type": "string"
+                },
+                {
+                    "internalType": "string",
+                    "name": "batchNumber",
+                    "type": "string"
+                },
+                {
+                    "internalType": "string",
+                    "name": "manufacturerName",
+                    "type": "string"
+                },
+                {
+                    "internalType": "address",
+                    "name": "manufacturer",
+                    "type": "address"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "manufactureDate",
+                    "type": "uint256"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "expiryDate",
+                    "type": "uint256"
+                },
+                {
+                    "internalType": "string",
+                    "name": "status",
+                    "type": "string"
+                },
+                {
+                    "internalType": "bool",
+                    "name": "verified",
+                    "type": "bool"
+                },
+                {
+                    "internalType": "address",
+                    "name": "currentOwner",
+                    "type": "address"
+                },
+                {
+                    "components": [
+                        {
+                            "internalType": "address",
+                            "name": "from",
+                            "type": "address"
+                        },
+                        {
+                            "internalType": "address",
+                            "name": "to",
+                            "type": "address"
+                        },
+                        {
+                            "internalType": "enum BatchStatus",
+                            "name": "status",
+                            "type": "uint8"
+                        },
+                        {
+                            "internalType": "uint256",
+                            "name": "timestamp",
+                            "type": "uint256"
+                        },
+                        {
+                            "internalType": "string",
+                            "name": "notes",
+                            "type": "string"
+                        }
+                    ],
+                    "internalType": "struct CustodyRecord[]",
+                    "name": "custodyTrail",
+                    "type": "tuple[]"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "inputs": [],
+            "name": "controlContract",
+            "outputs": [
+                {
+                    "internalType": "contract ControlContract",
+                    "name": "",
+                    "type": "address"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "inputs": [],
+            "name": "mintContract",
+            "outputs": [
+                {
+                    "internalType": "contract MintContract",
+                    "name": "",
+                    "type": "address"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        }
+    ]
+];
+
+//const verificationContract = new web3.eth.Contract(verificationContractABI, verificationContractAddress);
+const verificationContract = (typeof web3 !== 'undefined') ? new web3.eth.Contract(verificationContractABI, verificationContractAddress) : null;
+
+
+
 
         async function setControlContract() {
             const addr = document.getElementById('controlContractAddr').value;
@@ -289,7 +471,7 @@
 
         async function authorisePharmacy() {
             const address = document.getElementById('phAddress').value;
-            const name    = document.getElementById('phName').value;
+            const name = document.getElementById('phName').value;
             await controlContract.methods.authorisePharmacy(address, name)
                 .send({ from: web3.eth.defaultAccount })
                 .on('transactionHash', function(hash) { console.log('TX Hash:', hash); });
@@ -303,6 +485,106 @@
                 .on('transactionHash', function(hash) { console.log('TX Hash:', hash); });
             alert('Pharmacy revoked.');
         }
+
+
+        async function getManufacturerAddress() {
+        const batchId = document.getElementById('lookupBatchId').value;
+        const resultDiv = document.getElementById('lookupResult');
+
+        if (!batchId) {
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = '<p style="color:#C0392B;">Please enter a Batch ID.</p>';
+            return;
+        }
+
+        try {
+            // const result = await verificationContract.methods.batchStatus(batchId).call();
+        // ── MOCK DATA — remove when connecting to real contracts ──
+        // ── MOCK DATA — remove when connecting to real contracts ──
+        const result = {
+            0: 'Amoxicillin 500mg',
+            1: 'BATCH-001',
+            2: 'Pfizer Australia Pty Ltd',
+            3: '0x1234567890123456789012345678901234567890',
+            4: '1714000000',
+            5: '1777000000',
+            6: 'InTransit',
+            7: false,
+            8: '0xABCDabcdABCDabcdABCDabcdABCDabcdABCDabcd',
+            9: [
+                {
+                    from: '0x0000000000000000000000000000000000000000',
+                    to:   '0x1234567890123456789012345678901234567890',
+                    status: 0,
+                    timestamp: '1714000000',
+                    notes: ''
+                },
+                {
+                    from: '0x1234567890123456789012345678901234567890',
+                    to:   '0xABCDabcdABCDabcdABCDabcdABCDabcdABCDabcd',
+                    status: 1,
+                    timestamp: '1714100000',
+                    notes: ''
+                },
+                {
+                    from: '0xABCDabcdABCDabcdABCDabcdABCDabcdABCDabcd',
+                    to:   '0xDEADbeefDEADbeefDEADbeefDEADbeefDEADbeef',
+                    status: 2,
+                    timestamp: '1714200000',
+                    notes: 'AusPost Ref: AUS-993, Temp: 2-8°C'
+                }
+            ]
+        };
+        // ── END MOCK DATA ────────────────────────────────────────
+
+
+
+            const medicineName     = result[0];
+            const manufacturerName = result[2];
+            const manufacturer     = result[3];  // raw wallet address
+            const currentOwner     = result[8];  // current custodian raw address
+            const status           = result[6];
+
+            // Build custody trail with raw addresses for owner view
+            const custodyTrail = result[9];
+            let trailHTML = '';
+            const statusLabels = ['Produced', 'Released', 'InTransit', 'Received'];
+            custodyTrail.forEach(function(rec, i) {
+                const recStatus = statusLabels[rec.status] || rec.status;
+                const ts = new Date(rec.timestamp * 1000).toLocaleDateString('en-AU');
+                trailHTML += `
+                    <div style="background:#EBF2FF; border-radius:5px; padding:8px 10px; margin-bottom:6px; font-size:12px;">
+                        <strong>${i+1}. ${recStatus}</strong> · ${ts}
+                        <br>From: <span class="address-mono">${rec.from}</span>
+                        <br>To: &nbsp;&nbsp;<span class="address-mono">${rec.to}</span>
+                        ${rec.notes ? '<br>Notes: ' + rec.notes : ''}
+                    </div>`;
+            });
+
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = `
+                <p><strong>Medicine:</strong> ${medicineName}</p>
+                <p><strong>Status:</strong> ${status}</p>
+                <p><strong>Manufacturer Name:</strong> ${manufacturerName}</p>
+                <p><strong>Manufacturer Address:</strong><br>
+                    <span class="address-mono">${manufacturer}</span>
+                </p>
+                <p><strong>Current Custodian Address:</strong><br>
+                    <span class="address-mono">${currentOwner}</span>
+                </p>
+                <p style="margin-top:10px; margin-bottom:6px; font-weight:600; font-size:12px;
+                        color:#6B82A0; text-transform:uppercase; letter-spacing:0.8px;">
+                    Full Custody Trail (raw addresses)
+                </p>
+                ${trailHTML || '<div style="font-size:12px;color:#6B82A0;">No transfers recorded yet.</div>'}
+            `;
+
+        } catch(error) {
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = '<p style="color:#C0392B;">Batch not found or contract error. Check the Batch ID.</p>';
+            console.error('getManufacturerAddress error:', error);
+        }
+    }
     </script>
 
 </body>

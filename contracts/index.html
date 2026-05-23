@@ -7,39 +7,39 @@
     <title>Origin Pharm</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
- 
+
         body {
             font-family: 'Segoe UI', Arial, sans-serif;
             background-color: #F0F4F8;
             color: #1A2E44;
             min-height: 100vh;
         }
- 
+
         header {
             background-color: #0B2D6E;
             color: white;
             padding: 28px 24px;
             text-align: center;
         }
- 
+
         header h1 { font-size: 24px; font-weight: 600; }
         header p  { font-size: 13px; color: #A8C4E0; margin-top: 6px; }
- 
+
         .container {
             max-width: 720px;
             margin: 40px auto;
             padding: 0 20px 60px;
         }
- 
+
         .section-label {
             font-size: 11px;
             font-weight: 700;
             letter-spacing: 1.2px;
             text-transform: uppercase;
-            color: #6B82A0;
+            color: #3D5166;
             margin: 0 0 16px;
         }
- 
+
         .info-note {
             background: #EBF2FF;
             border: 1px solid #D6E0EF;
@@ -49,8 +49,7 @@
             color: #1553B6;
             margin-bottom: 28px;
         }
- 
-        /* Wallet status bar */
+
         .wallet-bar {
             background: #FFFFFF;
             border: 1px solid #D6E0EF;
@@ -62,19 +61,19 @@
             justify-content: space-between;
             gap: 12px;
         }
- 
-        .wallet-bar .wallet-label {
+
+        .wallet-label {
             font-size: 12px;
             font-weight: 500;
-            color: #6B82A0;
+            color: #3D5166;
         }
- 
-        .wallet-bar .wallet-address {
+
+        .wallet-address {
             font-size: 12px;
             color: #1A2E44;
             font-family: monospace;
         }
- 
+
         .wallet-status {
             display: inline-block;
             font-size: 11px;
@@ -82,118 +81,90 @@
             padding: 3px 10px;
             border-radius: 12px;
         }
- 
+
         .status-connected    { background: #E6F5EE; color: #0A7A4C; }
         .status-disconnected { background: #FEF3C7; color: #B45309; }
- 
-        /* Role cards grid */
+
         .roles-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            margin-bottom: 12px;
+            gap: 10px;
         }
- 
+
         .role-card {
-            background: #FFFFFF;
-            border: 1px solid #D6E0EF;
-            border-radius: 8px;
-            padding: 22px 20px;
-            text-decoration: none;
             display: flex;
             flex-direction: column;
-            gap: 8px;
-            cursor: pointer;
-            transition: border-color 0.15s, box-shadow 0.15s;
+            border-radius: 10px;
+            padding: 20px 20px 16px;
+            text-decoration: none;
+            border: 0.5px solid transparent;
             position: relative;
-            overflow: hidden;
+            transition: opacity 0.15s;
         }
- 
-        .role-card:hover {
-            border-color: #2E6EE1;
-            box-shadow: 0 2px 12px rgba(21, 83, 182, 0.10);
-        }
- 
-        .role-card .role-icon {
-            width: 36px;
-            height: 36px;
-            border-radius: 8px;
-            display: flex;
+
+        .role-card:hover { opacity: 0.88; }
+
+        .role-card-wide {
+            grid-column: 1 / -1;
+            flex-direction: row;
             align-items: center;
-            justify-content: center;
-            font-size: 18px;
-            margin-bottom: 4px;
+            gap: 20px;
         }
- 
-        .icon-owner        { background: #EBF2FF; }
-        .icon-manufacturer { background: #E6F5EE; }
-        .icon-distributor  { background: #FEF3C7; }
-        .icon-pharmacy     { background: #FDECEA; }
-        .icon-consumer     { background: #F0EEF8; }
- 
-        .role-card .role-name {
-            font-size: 14px;
+
+        .role-card-wide .role-body { flex: 1; }
+
+        .role-step {
+            font-size: 10px;
             font-weight: 600;
-            color: #0B2D6E;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            color: inherit;
+            opacity: 0.8;
+            margin-bottom: 10px;
         }
- 
-        .role-card .role-desc {
+
+        .role-name {
+            font-size: 15px;
+            font-weight: 600;
+            color: inherit;
+            margin-bottom: 5px;
+        }
+
+        .role-desc {
             font-size: 12px;
-            color: #6B82A0;
-            line-height: 1.5;
+            line-height: 1.55;
+            color: inherit;
+            opacity: 0.85;
         }
- 
-        .role-card .role-arrow {
+
+        .role-arrow {
             position: absolute;
             right: 16px;
             top: 50%;
             transform: translateY(-50%);
-            font-size: 18px;
-            color: #D6E0EF;
-            transition: color 0.15s, right 0.15s;
+            font-size: 20px;
+            color: inherit;
+            opacity: 0.5;
         }
- 
-        .role-card:hover .role-arrow {
-            color: #2E6EE1;
-            right: 12px;
-        }
- 
-        /* Consumer full-width card */
-        .role-card-wide {
-            grid-column: 1 / -1;
-        }
- 
-        .role-card-wide .role-arrow {
-            top: 50%;
-        }
- 
-        /* Connect button */
-        .btn-connect {
-            margin-top: 12px;
-            padding: 9px 20px;
-            background-color: #1553B6;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            font-size: 13px;
-            font-weight: 600;
-            font-family: inherit;
-            cursor: pointer;
-            width: 100%;
-        }
- 
-        .btn-connect:hover { background-color: #2E6EE1; }
- 
+
+        .role-card-wide .role-arrow { position: static; transform: none; }
+
+        .card-owner        { background: #104261; color: #FFFFFF; border-color: #6dc4ff; }
+        .card-manufacturer { background: #0b6351; color: #FFFFFF; border-color: #4fffdc; }
+        .card-distributor  { background: #4e0d68; color: #FFFFFF; border-color: #d057ff; }
+        .card-pharmacy     { background: #664106; color: #FFFFFF; border-color: #ffb97c; }
+        .card-consumer     { background: #c0dbff; color: #000000; border-color: #9ecdff; }
+
         .divider {
             border: none;
             border-top: 1px solid #EAF0F8;
             margin: 28px 0;
         }
- 
+
         footer {
             text-align: center;
             font-size: 11px;
-            color: #A8C4E0;
+            color: #5A7A96;
             padding: 0 0 24px;
         }
     </style>
@@ -224,44 +195,46 @@
  
         <!-- Role selection -->
         <div class="section-label">Select Your Role</div>
- 
+
         <div class="roles-grid">
- 
-            <a class="role-card" href="Owner.html">
-                <div class="role-icon icon-owner">🏛</div>
-                <div class="role-name">Owner / Admin</div>
+
+            <a class="role-card card-owner" href="Owner.html">
+                <div class="role-step">System Admin</div>
+                <div class="role-name">Owner</div>
                 <div class="role-desc">Register and manage authorised participants across the supply chain.</div>
                 <span class="role-arrow">›</span>
             </a>
- 
-            <a class="role-card" href="Manufacturer.html">
-                <div class="role-icon icon-manufacturer">🏭</div>
+
+            <a class="role-card card-manufacturer" href="Manufacturer.html">
+                <div class="role-step">Step 1</div>
                 <div class="role-name">Manufacturer</div>
                 <div class="role-desc">Mint new pharmaceutical batches and release to distributors.</div>
                 <span class="role-arrow">›</span>
             </a>
- 
-            <a class="role-card" href="Distributor.html">
-                <div class="role-icon icon-distributor">🚚</div>
+
+            <a class="role-card card-distributor" href="Distributor.html">
+                <div class="role-step">Step 2</div>
                 <div class="role-name">Distributor</div>
                 <div class="role-desc">Record shipments and transfer batches to authorised pharmacies.</div>
                 <span class="role-arrow">›</span>
             </a>
- 
-            <a class="role-card" href="Pharmacy.html">
-                <div class="role-icon icon-pharmacy">💊</div>
+
+            <a class="role-card card-pharmacy" href="Pharmacy.html">
+                <div class="role-step">Step 3</div>
                 <div class="role-name">Pharmacy</div>
                 <div class="role-desc">Confirm batch receipt and generate QR codes for dispensing.</div>
                 <span class="role-arrow">›</span>
             </a>
- 
-            <a class="role-card role-card-wide" href="Consumer.html">
-                <div class="role-icon icon-consumer">🔍</div>
-                <div class="role-name">Consumer / Regulator</div>
-                <div class="role-desc">Verify any batch using its ID or QR code — no wallet required.</div>
+
+            <a class="role-card role-card-wide card-consumer" href="Consumer.html">
+                <div class="role-body">
+                    <div class="role-step">Open Access</div>
+                    <div class="role-name">Consumer / Regulator</div>
+                    <div class="role-desc">Verify any batch using its ID or QR code — no wallet required.</div>
+                </div>
                 <span class="role-arrow">›</span>
             </a>
- 
+
         </div>
  
         <hr class="divider">
