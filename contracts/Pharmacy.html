@@ -6,7 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Origin Pharm (Pharmacy)</title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
 
         body {
             font-family: 'Segoe UI', Arial, sans-serif;
@@ -22,8 +26,16 @@
             text-align: center;
         }
 
-        header h1 { font-size: 22px; font-weight: 600; }
-        header p  { font-size: 13px; color: #A8C4E0; margin-top: 4px; }
+        header h1 {
+            font-size: 22px;
+            font-weight: 600;
+        }
+
+        header p {
+            font-size: 13px;
+            color: #A8C4E0;
+            margin-top: 4px;
+        }
 
         .container {
             max-width: 720px;
@@ -98,13 +110,26 @@
             width: 100%;
         }
 
-        button:hover { background-color: #2E6EE1; }
+        button:hover {
+            background-color: #2E6EE1;
+        }
 
-        button.confirm { background-color: #0A7A4C; }
-        button.confirm:hover { background-color: #076040; }
+        button.confirm {
+            background-color: #0A7A4C;
+        }
 
-        button.print-btn { background-color: #0B2D6E; margin-top: 10px; }
-        button.print-btn:hover { background-color: #1553B6; }
+        button.confirm:hover {
+            background-color: #076040;
+        }
+
+        button.print-btn {
+            background-color: #0B2D6E;
+            margin-top: 10px;
+        }
+
+        button.print-btn:hover {
+            background-color: #1553B6;
+        }
 
         /* Batch status result */
         #batchStatusResult {
@@ -122,7 +147,9 @@
             margin-bottom: 6px;
         }
 
-        #batchStatusResult p strong { color: #0B2D6E; }
+        #batchStatusResult p strong {
+            color: #0B2D6E;
+        }
 
         .verified-yes {
             display: inline-block;
@@ -162,9 +189,16 @@
             margin-bottom: 12px;
         }
 
-        #qrCode { margin: 0 auto 12px; display: inline-block; }
+        #qrCode {
+            margin: 0 auto 12px;
+            display: inline-block;
+        }
 
-        #productDetails { margin-top: 12px; font-size: 13px; color: #6B82A0; }
+        #productDetails {
+            margin-top: 12px;
+            font-size: 13px;
+            color: #6B82A0;
+        }
 
         .trail-item {
             background: #EBF2FF;
@@ -238,18 +272,18 @@
         }
 
         // ── UPDATE THESE ADDRESSES AFTER REMIX DEPLOYMENT ──────────────────
-        const controlContractAddress      = 'PASTE_CONTROL_CONTRACT_ADDRESS_HERE';
-        const verificationContractAddress = 'PASTE_VERIFICATION_CONTRACT_ADDRESS_HERE';
+        const controlContractAddress = '0x607428c19e4d6a8994DAE2c3f7E966bA4EF395e0';
+        const verificationContractAddress = '0x8Bd213C236be5eC35C999a17F94804B37B83a28F';
 
         const controlContractABI = [
-            {"inputs":[{"internalType":"uint256","name":"batchId","type":"uint256"}],"name":"receipt","outputs":[],"stateMutability":"nonpayable","type":"function"}
+            { "inputs": [{ "internalType": "uint256", "name": "batchId", "type": "uint256" }], "name": "receipt", "outputs": [], "stateMutability": "nonpayable", "type": "function" }
         ];
 
         const verificationContractABI = [
-            {"inputs":[{"internalType":"uint256","name":"batchId","type":"uint256"}],"name":"batchStatus","outputs":[{"internalType":"string","name":"medicineName","type":"string"},{"internalType":"string","name":"batchNumber","type":"string"},{"internalType":"string","name":"manufacturerName","type":"string"},{"internalType":"address","name":"manufacturer","type":"address"},{"internalType":"uint256","name":"manufactureDate","type":"uint256"},{"internalType":"uint256","name":"expiryDate","type":"uint256"},{"internalType":"string","name":"status","type":"string"},{"internalType":"bool","name":"verified","type":"bool"},{"internalType":"address","name":"currentOwner","type":"address"},{"components":[{"internalType":"address","name":"from","type":"address"},{"internalType":"address","name":"to","type":"address"},{"internalType":"uint8","name":"status","type":"uint8"},{"internalType":"uint256","name":"timestamp","type":"uint256"},{"internalType":"string","name":"notes","type":"string"}],"internalType":"struct CustodyRecord[]","name":"custodyTrail","type":"tuple[]"}],"stateMutability":"view","type":"function"}
+            { "inputs": [{ "internalType": "uint256", "name": "batchId", "type": "uint256" }], "name": "batchStatus", "outputs": [{ "internalType": "string", "name": "medicineName", "type": "string" }, { "internalType": "string", "name": "batchNumber", "type": "string" }, { "internalType": "string", "name": "manufacturerName", "type": "string" }, { "internalType": "address", "name": "manufacturer", "type": "address" }, { "internalType": "uint256", "name": "manufactureDate", "type": "uint256" }, { "internalType": "uint256", "name": "expiryDate", "type": "uint256" }, { "internalType": "string", "name": "status", "type": "string" }, { "internalType": "bool", "name": "verified", "type": "bool" }, { "internalType": "address", "name": "currentOwner", "type": "address" }, { "components": [{ "internalType": "address", "name": "from", "type": "address" }, { "internalType": "address", "name": "to", "type": "address" }, { "internalType": "uint8", "name": "status", "type": "uint8" }, { "internalType": "uint256", "name": "timestamp", "type": "uint256" }, { "internalType": "string", "name": "notes", "type": "string" }], "internalType": "struct CustodyRecord[]", "name": "custodyTrail", "type": "tuple[]" }], "stateMutability": "view", "type": "function" }
         ];
 
-        const controlContract      = new web3.eth.Contract(controlContractABI,      controlContractAddress);
+        const controlContract = new web3.eth.Contract(controlContractABI, controlContractAddress);
         const verificationContract = new web3.eth.Contract(verificationContractABI, verificationContractAddress);
 
         const statusLabels = ['Produced', 'Released', 'InTransit', 'Received'];
@@ -261,26 +295,26 @@
 
             const result = await verificationContract.methods.batchStatus(batchId).call();
 
-            const medicineName     = result[0];
-            const batchNumber      = result[1];
+            const medicineName = result[0];
+            const batchNumber = result[1];
             const manufacturerName = result[2];
-            const manufacturer     = result[3];
-            const manufactureDate  = new Date(result[4] * 1000).toLocaleDateString('en-AU');
-            const expiryDate       = new Date(result[5] * 1000).toLocaleDateString('en-AU');
-            const status           = result[6];
-            const verified         = result[7];
-            const currentOwner     = result[8];
-            const custodyTrail     = result[9];
+            const manufacturer = result[3];
+            const manufactureDate = new Date(result[4] * 1000).toLocaleDateString('en-AU');
+            const expiryDate = new Date(result[5] * 1000).toLocaleDateString('en-AU');
+            const status = result[6];
+            const verified = result[7];
+            const currentOwner = result[8];
+            const custodyTrail = result[9];
 
             const verifiedBadge = verified
                 ? '<span class="verified-yes">✓ Verified</span>'
                 : '<span class="verified-no">⏳ Not Yet Verified</span>';
 
             let trailHTML = '';
-            custodyTrail.forEach(function(rec, i) {
+            custodyTrail.forEach(function (rec, i) {
                 const recStatus = statusLabels[rec.status] || rec.status;
                 const ts = new Date(rec.timestamp * 1000).toLocaleDateString('en-AU');
-                trailHTML += `<div class="trail-item"><strong>${i+1}. ${recStatus}</strong> &mdash; ${rec.from.slice(0,6)}...${rec.from.slice(-4)} → ${rec.to.slice(0,6)}...${rec.to.slice(-4)} &nbsp;·&nbsp; ${ts}${rec.notes ? ' · ' + rec.notes : ''}</div>`;
+                trailHTML += `<div class="trail-item"><strong>${i + 1}. ${recStatus}</strong> &mdash; ${rec.from.slice(0, 6)}...${rec.from.slice(-4)} → ${rec.to.slice(0, 6)}...${rec.to.slice(-4)} &nbsp;·&nbsp; ${ts}${rec.notes ? ' · ' + rec.notes : ''}</div>`;
             });
 
             const resultDiv = document.getElementById('batchStatusResult');
@@ -304,21 +338,35 @@
             const batchId = document.getElementById('receiptBatchId').value;
             currentBatchId = batchId;
 
-            await controlContract.methods.receipt(batchId)
-                .send({ from: web3.eth.defaultAccount })
-                .on('transactionHash', function(hash) {
-                    console.log('Transaction Hash:', hash);
-                })
-                .on('confirmation', function(confirmationNumber, receipt) {
-                    console.log('Confirmation Number:', confirmationNumber);
-                    console.log('Receipt:', receipt);
-                })
-                .catch(function(error) { console.error('Error confirming receipt:', error); });
+            try {
+                // Send the transaction and wait for receipt
+                const receipt = await controlContract.methods.receipt(batchId)
+                    .send({
+                        from: web3.eth.defaultAccount
+                    })
+                    .on('transactionHash', function (hash) {
+                        console.log('Transaction Hash:', hash);
+                        // Optional: Show loading indicator here
+                    })
+                    .on('confirmation', function (confirmationNumber, receipt) {
+                        console.log('Confirmation Number:', confirmationNumber);
+                    });
 
-            document.getElementById('productDetails').textContent = 'Batch ' + batchId + ' received. Status → Received. verified = true.';
+                // This code only runs if the transaction was successful
+                console.log('Transaction successful! Receipt:', receipt);
 
-            // Generate QR code
-            generateQR(batchId);
+                // Update UI
+                document.getElementById('productDetails').textContent =
+                    'Batch ' + batchId + ' received. Status → Received. verified = true.';
+
+                // Generate QR code only on success
+                generateQR(batchId);
+
+            } catch (error) {
+                console.error('Error confirming receipt:', error);
+                // Optional: Show error message to user
+                alert('Transaction failed. Please try again.');
+            }
         }
 
         function generateQR(batchId) {
@@ -336,10 +384,10 @@
         }
 
         function printQR() {
-            var qrDiv  = document.getElementById('qrCode');
+            var qrDiv = document.getElementById('qrCode');
             var canvas = qrDiv.querySelector('canvas');
-            var img    = canvas ? canvas.toDataURL() : '';
-            var win    = window.open('', '_blank');
+            var img = canvas ? canvas.toDataURL() : '';
+            var win = window.open('', '_blank');
             win.document.write(
                 '<html><head><title>Origin Pharm QR Code</title>' +
                 '<style>body{font-family:Arial,sans-serif;text-align:center;padding:40px;}h2{color:#0B2D6E;}p{color:#6B82A0;font-size:13px;margin-top:8px;}</style>' +
@@ -356,4 +404,5 @@
     </script>
 
 </body>
+
 </html>
