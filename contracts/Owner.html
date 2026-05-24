@@ -420,8 +420,8 @@
     ]
 ];
 
-//const verificationContract = new web3.eth.Contract(verificationContractABI, verificationContractAddress);
-const verificationContract = (typeof web3 !== 'undefined') ? new web3.eth.Contract(verificationContractABI, verificationContractAddress) : null;
+const verificationContract = new web3.eth.Contract(verificationContractABI, verificationContractAddress);
+// const verificationContract = (typeof web3 !== 'undefined') ? new web3.eth.Contract(verificationContractABI, verificationContractAddress) : null;
 
 
 
