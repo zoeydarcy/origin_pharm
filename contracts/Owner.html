@@ -232,10 +232,10 @@
         <!-- LOOKUP ADDRESSES -->
         <div class="section-label">Participant Lookup</div>
         <div class="card">
-            <h3>Get Manufacturer Address</h3>
-            <label for="lookupBatchId">Batch ID</label>
-            <input type="number" id="lookupBatchId" placeholder="e.g. 1">
-            <button onclick="getManufacturerAddress()">Lookup</button>
+            <h3>Verify Participant</h3>
+            <label for="lookupAddress">Wallet Address</label>
+            <input type="text" id="lookupAddress" placeholder="0x...">
+            <button onclick="lookupParticipant()">Lookup</button>
             <div id="lookupResult"></div>
         </div>
 
@@ -261,20 +261,23 @@
         }
 
         // ── UPDATE THESE ADDRESSES AFTER REMIX DEPLOYMENT ──────────────────
-        const mintContractAddress    = '0x4A8479c0c4dd8749211f894bFBA799c3047075C8';
-        const controlContractAddress = '0x2A3D620bC9Aa08d10559CbeDBe1A04b1C9CFFE0D';
+        const mintContractAddress    = '0x84C8c652977a6BCF59Fa3F8f789990f3F9eFb692';
+        const controlContractAddress = '0xbB676cf90452F1d112208f8dA1a3D0024Bb37a6b';
 
         const mintContractABI = [
             {"inputs":[{"internalType":"address","name":"manufacturer","type":"address"},{"internalType":"string","name":"name","type":"string"}],"name":"authoriseManufacturer","outputs":[],"stateMutability":"nonpayable","type":"function"},
             {"inputs":[{"internalType":"address","name":"manufacturer","type":"address"}],"name":"revokeManufacturer","outputs":[],"stateMutability":"nonpayable","type":"function"},
-            {"inputs":[{"internalType":"address","name":"_controlContractAddress","type":"address"}],"name":"setControlContract","outputs":[],"stateMutability":"nonpayable","type":"function"}
+            {"inputs":[{"internalType":"address","name":"_controlContractAddress","type":"address"}],"name":"setControlContract","outputs":[],"stateMutability":"nonpayable","type":"function"},
+            {"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"authorisedManufacturers","outputs":[{"internalType":"bool","name":"isAuthorised","type":"bool"},{"internalType":"string","name":"name","type":"string"}],"stateMutability":"view","type":"function"}
         ];
 
         const controlContractABI = [
             {"inputs":[{"internalType":"address","name":"distributor","type":"address"},{"internalType":"string","name":"name","type":"string"}],"name":"authoriseDistributor","outputs":[],"stateMutability":"nonpayable","type":"function"},
             {"inputs":[{"internalType":"address","name":"distributor","type":"address"}],"name":"revokeDistributor","outputs":[],"stateMutability":"nonpayable","type":"function"},
             {"inputs":[{"internalType":"address","name":"pharmacy","type":"address"},{"internalType":"string","name":"name","type":"string"}],"name":"authorisePharmacy","outputs":[],"stateMutability":"nonpayable","type":"function"},
-            {"inputs":[{"internalType":"address","name":"pharmacy","type":"address"}],"name":"revokePharmacy","outputs":[],"stateMutability":"nonpayable","type":"function"}
+            {"inputs":[{"internalType":"address","name":"pharmacy","type":"address"}],"name":"revokePharmacy","outputs":[],"stateMutability":"nonpayable","type":"function"},
+            {"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"authorisedDistributors","outputs":[{"internalType":"bool","name":"isAuthorised","type":"bool"},{"internalType":"string","name":"name","type":"string"}],"stateMutability":"view","type":"function"},
+            {"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"authorisedPharmacies","outputs":[{"internalType":"bool","name":"isAuthorised","type":"bool"},{"internalType":"string","name":"name","type":"string"}],"stateMutability":"view","type":"function"}
         ];
 
         const mintContract = new web3.eth.Contract(mintContractABI,    mintContractAddress);
@@ -420,11 +423,7 @@
     ]
 ];
 
-const verificationContract = new web3.eth.Contract(verificationContractABI, verificationContractAddress);
-// const verificationContract = (typeof web3 !== 'undefined') ? new web3.eth.Contract(verificationContractABI, verificationContractAddress) : null;
-
-
-
+        const verificationContract = new web3.eth.Contract(verificationContractABI, verificationContractAddress);
 
         async function setControlContract() {
             const addr = document.getElementById('controlContractAddr').value;
@@ -487,107 +486,92 @@ const verificationContract = new web3.eth.Contract(verificationContractABI, veri
         }
 
 
-        async function getManufacturerAddress() {
-        const batchId = document.getElementById('lookupBatchId').value;
-        const resultDiv = document.getElementById('lookupResult');
+        async function lookupParticipant() {
+            const address   = document.getElementById('lookupAddress').value.trim();
+            const resultDiv = document.getElementById('lookupResult');
 
-        if (!batchId) {
+            if (!address || !address.startsWith('0x')) {
+                resultDiv.style.display = 'block';
+                resultDiv.innerHTML = '<p style="color:#C0392B;">Please enter a valid wallet address starting with 0x.</p>';
+                return;
+            }
+
             resultDiv.style.display = 'block';
-            resultDiv.innerHTML = '<p style="color:#C0392B;">Please enter a Batch ID.</p>';
-            return;
-        }
+            resultDiv.innerHTML = '<p style="color:#6B82A0;">Checking registries...</p>';
 
-        try {
-            // const result = await verificationContract.methods.batchStatus(batchId).call();
-        // ── MOCK DATA — remove when connecting to real contracts ──
-        // ── MOCK DATA — remove when connecting to real contracts ──
-        const result = {
-            0: 'Amoxicillin 500mg',
-            1: 'BATCH-001',
-            2: 'Pfizer Australia Pty Ltd',
-            3: '0x1234567890123456789012345678901234567890',
-            4: '1714000000',
-            5: '1777000000',
-            6: 'InTransit',
-            7: false,
-            8: '0xABCDabcdABCDabcdABCDabcdABCDabcdABCDabcd',
-            9: [
-                {
-                    from: '0x0000000000000000000000000000000000000000',
-                    to:   '0x1234567890123456789012345678901234567890',
-                    status: 0,
-                    timestamp: '1714000000',
-                    notes: ''
-                },
-                {
-                    from: '0x1234567890123456789012345678901234567890',
-                    to:   '0xABCDabcdABCDabcdABCDabcdABCDabcdABCDabcd',
-                    status: 1,
-                    timestamp: '1714100000',
-                    notes: ''
-                },
-                {
-                    from: '0xABCDabcdABCDabcdABCDabcdABCDabcdABCDabcd',
-                    to:   '0xDEADbeefDEADbeefDEADbeefDEADbeefDEADbeef',
-                    status: 2,
-                    timestamp: '1714200000',
-                    notes: 'AusPost Ref: AUS-993, Temp: 2-8°C'
+            try {
+                // Check all three registries in parallel
+                const [mfrResult, distResult, phResult] = await Promise.all([
+                    mintContract.methods.authorisedManufacturers(address).call().catch(() => null),
+                    controlContract.methods.authorisedDistributors(address).call().catch(() => null),
+                    controlContract.methods.authorisedPharmacies(address).call().catch(() => null)
+                ]);
+
+                let found = false;
+                let html  = '';
+
+                if (mfrResult && mfrResult.isAuthorised) {
+                    found = true;
+                    html += buildResultCard('Manufacturer', mfrResult.name, address, true);
                 }
-            ]
-        };
-        // ── END MOCK DATA ────────────────────────────────────────
 
+                if (distResult && distResult.isAuthorised) {
+                    found = true;
+                    html += buildResultCard('Distributor', distResult.name, address, true);
+                }
 
+                if (phResult && phResult.isAuthorised) {
+                    found = true;
+                    html += buildResultCard('Pharmacy', phResult.name, address, true);
+                }
 
-            const medicineName     = result[0];
-            const manufacturerName = result[2];
-            const manufacturer     = result[3];  // raw wallet address
-            const currentOwner     = result[8];  // current custodian raw address
-            const status           = result[6];
+                // Check if exists but revoked
+                if (!found) {
+                    const revokedMfr  = mfrResult  && !mfrResult.isAuthorised  && mfrResult.name  && mfrResult.name.length  > 0;
+                    const revokedDist = distResult && !distResult.isAuthorised && distResult.name && distResult.name.length > 0;
+                    const revokedPh   = phResult   && !phResult.isAuthorised   && phResult.name   && phResult.name.length   > 0;
 
-            // Build custody trail with raw addresses for owner view
-            const custodyTrail = result[9];
-            let trailHTML = '';
-            const statusLabels = ['Produced', 'Released', 'InTransit', 'Received'];
-            custodyTrail.forEach(function(rec, i) {
-                const recStatus = statusLabels[rec.status] || rec.status;
-                const ts = new Date(rec.timestamp * 1000).toLocaleDateString('en-AU');
-                trailHTML += `
-                    <div style="background:#EBF2FF; border-radius:5px; padding:8px 10px; margin-bottom:6px; font-size:12px;">
-                        <strong>${i+1}. ${recStatus}</strong> · ${ts}
-                        <br>From: <span class="address-mono">${rec.from}</span>
-                        <br>To: &nbsp;&nbsp;<span class="address-mono">${rec.to}</span>
-                        ${rec.notes ? '<br>Notes: ' + rec.notes : ''}
-                    </div>`;
-            });
+                    if (revokedMfr)  html += buildResultCard('Manufacturer', mfrResult.name,  address, false);
+                    if (revokedDist) html += buildResultCard('Distributor',  distResult.name, address, false);
+                    if (revokedPh)   html += buildResultCard('Pharmacy',     phResult.name,   address, false);
+                }
 
-            resultDiv.style.display = 'block';
-            resultDiv.innerHTML = `
-                <p><strong>Medicine:</strong> ${medicineName}</p>
-                <p><strong>Status:</strong> ${status}</p>
-                <p><strong>Manufacturer Name:</strong> ${manufacturerName}</p>
-                <p><strong>Manufacturer Address:</strong><br>
-                    <span class="address-mono">${manufacturer}</span>
-                </p>
-                <p><strong>Current Custodian Address:</strong><br>
-                    <span class="address-mono">${currentOwner}</span>
-                </p>
-                <p style="margin-top:10px; margin-bottom:6px; font-weight:600; font-size:12px;
-                        color:#6B82A0; text-transform:uppercase; letter-spacing:0.8px;">
-                    Full Custody Trail (raw addresses)
-                </p>
-                ${trailHTML || '<div style="font-size:12px;color:#6B82A0;">No transfers recorded yet.</div>'}
-            `;
+                if (!found && html === '') {
+                    resultDiv.innerHTML = `
+                        <p style="color:#C0392B; font-size:13px;">
+                            This address is not registered in any participant registry.
+                        </p>
+                        <p style="font-size:12px; color:#6B82A0; margin-top:6px;">
+                            Address checked: <span class="address-mono">${address}</span>
+                        </p>`;
+                } else {
+                    resultDiv.innerHTML = html;
+                }
 
-        } catch(error) {
-            resultDiv.style.display = 'block';
-            resultDiv.innerHTML = '<p style="color:#C0392B;">Batch not found or contract error. Check the Batch ID.</p>';
-            console.error('getManufacturerAddress error:', error);
+            } catch(error) {
+                resultDiv.innerHTML = '<p style="color:#C0392B;">Lookup failed. Check the address and try again.</p>';
+                console.error('lookupParticipant error:', error);
+            }
         }
-    }
+
+        function buildResultCard(role, name, address, isAuthorised) {
+            const badge = isAuthorised
+                ? '<span style="background:#E6F5EE; color:#0A7A4C; border-radius:12px; padding:2px 10px; font-size:11px; font-weight:700;">✓ Authorised</span>'
+                : '<span style="background:#FDECEA; color:#C0392B; border-radius:12px; padding:2px 10px; font-size:11px; font-weight:700;">✗ Revoked</span>';
+
+            return `
+                <div style="background:#F8FAFD; border:1px solid #D6E0EF; border-radius:6px; padding:12px 14px; margin-bottom:10px;">
+                    <p style="font-size:11px; font-weight:700; color:#6B82A0; text-transform:uppercase;
+                            letter-spacing:0.8px; margin-bottom:8px;">${role}</p>
+                    <p style="margin-bottom:6px;"><strong>Registered Name:</strong> ${name}</p>
+                    <p style="margin-bottom:6px;"><strong>Status:</strong> ${badge}</p>
+                    <p style="margin-bottom:0;"><strong>Wallet Address:</strong><br>
+                        <span class="address-mono">${address}</span>
+                    </p>
+                </div>`;
+        }
     </script>
 
 </body>
 </html>
-Owner (5).html
-13 KB
+
