@@ -6,11 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Origin Pharm (Owner)</title>
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
             font-family: 'Segoe UI', Arial, sans-serif;
@@ -26,17 +22,8 @@
             text-align: center;
         }
 
-        header h1 {
-            font-size: 22px;
-            font-weight: 600;
-            letter-spacing: 0.3px;
-        }
-
-        header p {
-            font-size: 13px;
-            color: #A8C4E0;
-            margin-top: 4px;
-        }
+        header h1 { font-size: 22px; font-weight: 600; letter-spacing: 0.3px; }
+        header p  { font-size: 13px; color: #A8C4E0; margin-top: 4px; }
 
         .container {
             max-width: 720px;
@@ -69,6 +56,26 @@
             padding-bottom: 10px;
             border-bottom: 1px solid #EAF0F8;
         }
+
+        .btn-back {
+            position: absolute;
+            left: 24px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: inline-block;
+            padding: 6px 14px;
+            background: rgba(255,255,255,0.12);
+            color: #ffffff;
+            font-size: 12px;
+            font-weight: 600;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            text-decoration: none;
+            border-radius: 5px;
+            border: 1px solid rgba(255,255,255,0.25);
+            letter-spacing: 0.3px;
+        }
+
+        /* header { position: relative; } */
 
         label {
             display: block;
@@ -112,42 +119,56 @@
             width: 100%;
         }
 
-        button:hover {
-            background-color: #2E6EE1;
-        }
+        button:hover { background-color: #2E6EE1; }
 
         button.revoke {
             background-color: #EAF0F8;
             color: #C0392B;
         }
 
-        button.revoke:hover {
-            background-color: #FDECEA;
-        }
-
-        button.Find {
-            background-color: #eaedf8;
-            color: #2bc041;
-        }
-
-        button.Find:hover {
-            background-color: #eafdf0;
-        }
+        button.revoke:hover { background-color: #FDECEA; }
 
         hr {
             border: none;
             border-top: 1px solid #EAF0F8;
             margin: 16px 0;
         }
+
+        #lookupResult {
+            display: none;
+            margin-top: 12px;
+            padding: 12px 14px;
+            background: #F8FAFD;
+            border: 1px solid #D6E0EF;
+            border-radius: 5px;
+            font-size: 13px;
+        }
+
+        #lookupResult p {
+            margin-bottom: 6px;
+            color: #1A2E44;
+        }
+
+        #lookupResult p strong {
+            color: #0B2D6E;
+        }
+
+        #lookupResult .address-mono {
+            font-family: monospace;
+            font-size: 12px;
+            color: #1553B6;
+            word-break: break-all;
+        }
     </style>
 </head>
 
 <body>
 
-    <header>
-        <h1>Origin Pharm</h1>
-        <p>Owner Portal — Participant Registration</p>
-    </header>
+ <header style="position: relative;">
+    <a href="index.html" class="btn-back">← Back to Home</a>
+    <h1>Origin Pharm</h1>
+    <p>Owner Portal — Participant Registration</p>
+</header>
 
     <div class="container">
 
@@ -174,12 +195,6 @@
             <label for="mfrRevokeAddress">Wallet Address</label>
             <input type="text" id="mfrRevokeAddress" placeholder="0x...">
             <button class="revoke" onclick="revokeManufacturer()">Revoke</button>
-            <hr>
-            <h3>Get Manufacturer Name</h3>
-            <label for="mfrFindAddress">Wallet Address</label>
-            <input type="text" id="mfrFindAddress" placeholder="0x...">
-            <button class="Find" onclick="authorisedManufacturers()">Search</button>
-            <div id="ManufacturerInfo"></div>
         </div>
 
         <!-- DISTRIBUTORS -->
@@ -196,12 +211,6 @@
             <label for="distRevokeAddress">Wallet Address</label>
             <input type="text" id="distRevokeAddress" placeholder="0x...">
             <button class="revoke" onclick="revokeDistributor()">Revoke</button>
-            <hr>
-            <h3>Get Distributor Name</h3>
-            <label for="distFindAddress">Wallet Address</label>
-            <input type="text" id="distFindAddress" placeholder="0x...">
-            <button class="Find" onclick="authorisedDistributors()">Search</button>
-            <div id="DistributorInfo"></div>
         </div>
 
         <!-- PHARMACIES -->
@@ -218,12 +227,16 @@
             <label for="phRevokeAddress">Wallet Address</label>
             <input type="text" id="phRevokeAddress" placeholder="0x...">
             <button class="revoke" onclick="revokePharmacy()">Revoke</button>
-            <hr>
-            <h3>Get Pharmacy Name</h3>
-            <label for="phFindAddress">Wallet Address</label>
-            <input type="text" id="phFindAddress" placeholder="0x...">
-            <button class="Find" onclick="authorisedPharmacies()">Search</button>
-            <div id="PharmacyInfo"></div>
+        </div>
+
+        <!-- LOOKUP ADDRESSES -->
+        <div class="section-label">Participant Lookup</div>
+        <div class="card">
+            <h3>Get Manufacturer Address</h3>
+            <label for="lookupBatchId">Batch ID</label>
+            <input type="number" id="lookupBatchId" placeholder="e.g. 1">
+            <button onclick="getManufacturerAddress()">Lookup</button>
+            <div id="lookupResult"></div>
         </div>
 
     </div>
@@ -248,138 +261,333 @@
         }
 
         // ── UPDATE THESE ADDRESSES AFTER REMIX DEPLOYMENT ──────────────────
-        const mintContractAddress = '0x9fA1Fc21132b7F35c4DfaF14Cc43996f4CDB9164';
-        const controlContractAddress = '0x607428c19e4d6a8994DAE2c3f7E966bA4EF395e0';
+        const mintContractAddress    = '0x4A8479c0c4dd8749211f894bFBA799c3047075C8';
+        const controlContractAddress = '0x2A3D620bC9Aa08d10559CbeDBe1A04b1C9CFFE0D';
 
         const mintContractABI = [
-            // setControlContract
-            { "inputs": [{ "internalType": "address", "name": "_controlContractAddress", "type": "address" }], "name": "setControlContract", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
-            // Authorise Manufacturer
-            { "inputs": [{ "internalType": "address", "name": "manufacturer", "type": "address" }, { "internalType": "string", "name": "name", "type": "string" }], "name": "authoriseManufacturer", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
-            // Revoke Manufacturer
-            { "inputs": [{ "internalType": "address", "name": "manufacturer", "type": "address" }], "name": "revokeManufacturer", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
-            // Get Manufacturer Name
-            { "inputs": [{ "internalType": "address", "name": "", "type": "address" }], "name": "authorisedManufacturers", "outputs": [{ "internalType": "bool", "name": "isAuthorised", "type": "bool" }, { "internalType": "string", "name": "name", "type": "string" }], "stateMutability": "view", "type": "function" }
+            {"inputs":[{"internalType":"address","name":"manufacturer","type":"address"},{"internalType":"string","name":"name","type":"string"}],"name":"authoriseManufacturer","outputs":[],"stateMutability":"nonpayable","type":"function"},
+            {"inputs":[{"internalType":"address","name":"manufacturer","type":"address"}],"name":"revokeManufacturer","outputs":[],"stateMutability":"nonpayable","type":"function"},
+            {"inputs":[{"internalType":"address","name":"_controlContractAddress","type":"address"}],"name":"setControlContract","outputs":[],"stateMutability":"nonpayable","type":"function"}
         ];
 
         const controlContractABI = [
-            // Authorise Distributor
-            { "inputs": [{ "internalType": "address", "name": "distributor", "type": "address" }, { "internalType": "string", "name": "name", "type": "string" }], "name": "authoriseDistributor", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
-            // Revoke Distributor
-            { "inputs": [{ "internalType": "address", "name": "distributor", "type": "address" }], "name": "revokeDistributor", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
-            // Get Distributor Name
-            { "inputs": [{ "internalType": "address", "name": "", "type": "address" }], "name": "authorisedDistributors", "outputs": [{ "internalType": "bool", "name": "isAuthorised", "type": "bool" }, { "internalType": "string", "name": "name", "type": "string" }], "stateMutability": "view", "type": "function" },
-            // Authorise Pharmacy
-            { "inputs": [{ "internalType": "address", "name": "pharmacy", "type": "address" }, { "internalType": "string", "name": "name", "type": "string" }], "name": "authorisePharmacy", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
-            // Revoke Pharmacy
-            { "inputs": [{ "internalType": "address", "name": "pharmacy", "type": "address" }], "name": "revokePharmacy", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
-            // Get Pharmacy Name
-            { "inputs": [{ "internalType": "address", "name": "", "type": "address" }], "name": "authorisedPharmacies", "outputs": [{ "internalType": "bool", "name": "isAuthorised", "type": "bool" }, { "internalType": "string", "name": "name", "type": "string" }], "stateMutability": "view", "type": "function" }
+            {"inputs":[{"internalType":"address","name":"distributor","type":"address"},{"internalType":"string","name":"name","type":"string"}],"name":"authoriseDistributor","outputs":[],"stateMutability":"nonpayable","type":"function"},
+            {"inputs":[{"internalType":"address","name":"distributor","type":"address"}],"name":"revokeDistributor","outputs":[],"stateMutability":"nonpayable","type":"function"},
+            {"inputs":[{"internalType":"address","name":"pharmacy","type":"address"},{"internalType":"string","name":"name","type":"string"}],"name":"authorisePharmacy","outputs":[],"stateMutability":"nonpayable","type":"function"},
+            {"inputs":[{"internalType":"address","name":"pharmacy","type":"address"}],"name":"revokePharmacy","outputs":[],"stateMutability":"nonpayable","type":"function"}
         ];
 
-        const mintContract = new web3.eth.Contract(mintContractABI, mintContractAddress);
+        const mintContract = new web3.eth.Contract(mintContractABI,    mintContractAddress);
         const controlContract = new web3.eth.Contract(controlContractABI, controlContractAddress);
+
+    const verificationContractAddress = 'PASTE_VERIFICATION_CONTRACT_ADDRESS_HERE';
+
+    const verificationContractABI = [
+    [
+        {
+            "inputs": [
+                {
+                    "internalType": "address",
+                    "name": "mintContractAddress",
+                    "type": "address"
+                },
+                {
+                    "internalType": "address",
+                    "name": "controlContractAddress",
+                    "type": "address"
+                }
+            ],
+            "stateMutability": "nonpayable",
+            "type": "constructor"
+        },
+        {
+            "inputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "batchId",
+                    "type": "uint256"
+                }
+            ],
+            "name": "batchStatus",
+            "outputs": [
+                {
+                    "internalType": "string",
+                    "name": "medicineName",
+                    "type": "string"
+                },
+                {
+                    "internalType": "string",
+                    "name": "batchNumber",
+                    "type": "string"
+                },
+                {
+                    "internalType": "string",
+                    "name": "manufacturerName",
+                    "type": "string"
+                },
+                {
+                    "internalType": "address",
+                    "name": "manufacturer",
+                    "type": "address"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "manufactureDate",
+                    "type": "uint256"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "expiryDate",
+                    "type": "uint256"
+                },
+                {
+                    "internalType": "string",
+                    "name": "status",
+                    "type": "string"
+                },
+                {
+                    "internalType": "bool",
+                    "name": "verified",
+                    "type": "bool"
+                },
+                {
+                    "internalType": "address",
+                    "name": "currentOwner",
+                    "type": "address"
+                },
+                {
+                    "components": [
+                        {
+                            "internalType": "address",
+                            "name": "from",
+                            "type": "address"
+                        },
+                        {
+                            "internalType": "address",
+                            "name": "to",
+                            "type": "address"
+                        },
+                        {
+                            "internalType": "enum BatchStatus",
+                            "name": "status",
+                            "type": "uint8"
+                        },
+                        {
+                            "internalType": "uint256",
+                            "name": "timestamp",
+                            "type": "uint256"
+                        },
+                        {
+                            "internalType": "string",
+                            "name": "notes",
+                            "type": "string"
+                        }
+                    ],
+                    "internalType": "struct CustodyRecord[]",
+                    "name": "custodyTrail",
+                    "type": "tuple[]"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "inputs": [],
+            "name": "controlContract",
+            "outputs": [
+                {
+                    "internalType": "contract ControlContract",
+                    "name": "",
+                    "type": "address"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "inputs": [],
+            "name": "mintContract",
+            "outputs": [
+                {
+                    "internalType": "contract MintContract",
+                    "name": "",
+                    "type": "address"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        }
+    ]
+];
+
+const verificationContract = new web3.eth.Contract(verificationContractABI, verificationContractAddress);
+// const verificationContract = (typeof web3 !== 'undefined') ? new web3.eth.Contract(verificationContractABI, verificationContractAddress) : null;
+
+
+
 
         async function setControlContract() {
             const addr = document.getElementById('controlContractAddr').value;
             await mintContract.methods.setControlContract(addr)
                 .send({ from: web3.eth.defaultAccount })
-                .on('transactionHash', function (hash) { console.log('TX Hash:', hash); })
-                .on('confirmation', function (num, receipt) { console.log('Confirmed:', receipt); });
+                .on('transactionHash', function(hash) { console.log('TX Hash:', hash); })
+                .on('confirmation', function(num, receipt) { console.log('Confirmed:', receipt); });
             alert('ControlContract wired successfully!');
         }
 
-        // Manufacturers
         async function authoriseManufacturer() {
             const address = document.getElementById('mfrAddress').value;
-            const name = document.getElementById('mfrName').value;
-            await mintContract.methods.authoriseManufacturer(address, name).send({ from: web3.eth.defaultAccount }).on('transactionHash', function (hash) { console.log('TX Hash:', hash); });
+            const name    = document.getElementById('mfrName').value;
+            await mintContract.methods.authoriseManufacturer(address, name)
+                .send({ from: web3.eth.defaultAccount })
+                .on('transactionHash', function(hash) { console.log('TX Hash:', hash); });
             alert('Manufacturer authorised: ' + name);
         }
+
         async function revokeManufacturer() {
             const address = document.getElementById('mfrRevokeAddress').value;
-            try {
-                await mintContract.methods.revokeManufacturer(address).send({ from: web3.eth.defaultAccount }).on('transactionHash', function (hash) { console.log('TX Hash:', hash); });
-                alert('Manufacturer revoked.');
-            }
-            catch (error) {
-                console.error(error);
-                alert('Error revoking manufacturer. Please check Address is Valid.');
-            }
-
-        }
-        async function authorisedManufacturers() {
-            const address = document.getElementById('mfrFindAddress').value;
-            const result = await mintContract.methods.authorisedManufacturers(address).call();
-            const IsAuth = result[0];
-            const Name = result[1];
-            const ManufacturerInfoDiv = document.getElementById('ManufacturerInfo');
-            ManufacturerInfoDiv.innerHTML = `
-            <p><strong>Is Authorised:</strong> ${IsAuth}</p>
-            <p><strong>Name:</strong> ${Name}</p>`;
+            await mintContract.methods.revokeManufacturer(address)
+                .send({ from: web3.eth.defaultAccount })
+                .on('transactionHash', function(hash) { console.log('TX Hash:', hash); });
+            alert('Manufacturer revoked.');
         }
 
-        // Distributors
         async function authoriseDistributor() {
             const address = document.getElementById('distAddress').value;
-            const name = document.getElementById('distName').value;
-            await controlContract.methods.authoriseDistributor(address, name).send({ from: web3.eth.defaultAccount }).on('transactionHash', function (hash) { console.log('TX Hash:', hash); });
+            const name    = document.getElementById('distName').value;
+            await controlContract.methods.authoriseDistributor(address, name)
+                .send({ from: web3.eth.defaultAccount })
+                .on('transactionHash', function(hash) { console.log('TX Hash:', hash); });
             alert('Distributor authorised: ' + name);
         }
+
         async function revokeDistributor() {
             const address = document.getElementById('distRevokeAddress').value;
-            try {
-                await controlContract.methods.revokeDistributor(address).send({ from: web3.eth.defaultAccount }).on('transactionHash', function (hash) { console.log('TX Hash:', hash); });
-                alert('Distributor revoked.');
-            }
-            catch (error) {
-                alert('Error revoking distributor. Please check Address is Valid.');
-            }
-        }
-        async function authorisedDistributors() {
-            const address = document.getElementById('distFindAddress').value;
-            const result = await controlContract.methods.authorisedDistributors(address).call();
-            const IsAuth = result[0];
-            const Name = result[1];
-            const DistributorInfoDiv = document.getElementById('DistributorInfo');
-            DistributorInfoDiv.innerHTML = `
-            <p><strong>Is Authorised:</strong> ${IsAuth}</p>
-            <p><strong>Name:</strong> ${Name}</p>`;
+            await controlContract.methods.revokeDistributor(address)
+                .send({ from: web3.eth.defaultAccount })
+                .on('transactionHash', function(hash) { console.log('TX Hash:', hash); });
+            alert('Distributor revoked.');
         }
 
-        // Pharmacies
         async function authorisePharmacy() {
             const address = document.getElementById('phAddress').value;
             const name = document.getElementById('phName').value;
-            await controlContract.methods.authorisePharmacy(address, name).send({ from: web3.eth.defaultAccount }).on('transactionHash', function (hash) { console.log('TX Hash:', hash); });
+            await controlContract.methods.authorisePharmacy(address, name)
+                .send({ from: web3.eth.defaultAccount })
+                .on('transactionHash', function(hash) { console.log('TX Hash:', hash); });
             alert('Pharmacy authorised: ' + name);
         }
+
         async function revokePharmacy() {
             const address = document.getElementById('phRevokeAddress').value;
-            await controlContract.methods.revokePharmacy(address).send({ from: web3.eth.defaultAccount }).on('transactionHash', function (hash) { console.log('TX Hash:', hash); });
+            await controlContract.methods.revokePharmacy(address)
+                .send({ from: web3.eth.defaultAccount })
+                .on('transactionHash', function(hash) { console.log('TX Hash:', hash); });
             alert('Pharmacy revoked.');
-            try {
-                await controlContract.methods.revokePharmacy(address).send({ from: web3.eth.defaultAccount }).on('transactionHash', function (hash) { console.log('TX Hash:', hash); });
-                alert('Pharmacy revoked.');
-            }
-            catch (error) {
-                alert('Error revoking distributor. Please check Address is Valid.');
-            }
         }
-        async function authorisedPharmacies() {
-            const address = document.getElementById('phFindAddress').value;
-            const result = await controlContract.methods.authorisedPharmacies(address).call();
-            const IsAuth = result[0];
-            const Name = result[1];
-            const PharmacyInfoDiv = document.getElementById('PharmacyInfo');
-            PharmacyInfoDiv.innerHTML = `
-            <p><strong>Is Authorised:</strong> ${IsAuth}</p>
-            <p><strong>Name:</strong> ${Name}</p>`;
+
+
+        async function getManufacturerAddress() {
+        const batchId = document.getElementById('lookupBatchId').value;
+        const resultDiv = document.getElementById('lookupResult');
+
+        if (!batchId) {
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = '<p style="color:#C0392B;">Please enter a Batch ID.</p>';
+            return;
         }
+
+        try {
+            // const result = await verificationContract.methods.batchStatus(batchId).call();
+        // ── MOCK DATA — remove when connecting to real contracts ──
+        // ── MOCK DATA — remove when connecting to real contracts ──
+        const result = {
+            0: 'Amoxicillin 500mg',
+            1: 'BATCH-001',
+            2: 'Pfizer Australia Pty Ltd',
+            3: '0x1234567890123456789012345678901234567890',
+            4: '1714000000',
+            5: '1777000000',
+            6: 'InTransit',
+            7: false,
+            8: '0xABCDabcdABCDabcdABCDabcdABCDabcdABCDabcd',
+            9: [
+                {
+                    from: '0x0000000000000000000000000000000000000000',
+                    to:   '0x1234567890123456789012345678901234567890',
+                    status: 0,
+                    timestamp: '1714000000',
+                    notes: ''
+                },
+                {
+                    from: '0x1234567890123456789012345678901234567890',
+                    to:   '0xABCDabcdABCDabcdABCDabcdABCDabcdABCDabcd',
+                    status: 1,
+                    timestamp: '1714100000',
+                    notes: ''
+                },
+                {
+                    from: '0xABCDabcdABCDabcdABCDabcdABCDabcdABCDabcd',
+                    to:   '0xDEADbeefDEADbeefDEADbeefDEADbeefDEADbeef',
+                    status: 2,
+                    timestamp: '1714200000',
+                    notes: 'AusPost Ref: AUS-993, Temp: 2-8°C'
+                }
+            ]
+        };
+        // ── END MOCK DATA ────────────────────────────────────────
+
+
+
+            const medicineName     = result[0];
+            const manufacturerName = result[2];
+            const manufacturer     = result[3];  // raw wallet address
+            const currentOwner     = result[8];  // current custodian raw address
+            const status           = result[6];
+
+            // Build custody trail with raw addresses for owner view
+            const custodyTrail = result[9];
+            let trailHTML = '';
+            const statusLabels = ['Produced', 'Released', 'InTransit', 'Received'];
+            custodyTrail.forEach(function(rec, i) {
+                const recStatus = statusLabels[rec.status] || rec.status;
+                const ts = new Date(rec.timestamp * 1000).toLocaleDateString('en-AU');
+                trailHTML += `
+                    <div style="background:#EBF2FF; border-radius:5px; padding:8px 10px; margin-bottom:6px; font-size:12px;">
+                        <strong>${i+1}. ${recStatus}</strong> · ${ts}
+                        <br>From: <span class="address-mono">${rec.from}</span>
+                        <br>To: &nbsp;&nbsp;<span class="address-mono">${rec.to}</span>
+                        ${rec.notes ? '<br>Notes: ' + rec.notes : ''}
+                    </div>`;
+            });
+
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = `
+                <p><strong>Medicine:</strong> ${medicineName}</p>
+                <p><strong>Status:</strong> ${status}</p>
+                <p><strong>Manufacturer Name:</strong> ${manufacturerName}</p>
+                <p><strong>Manufacturer Address:</strong><br>
+                    <span class="address-mono">${manufacturer}</span>
+                </p>
+                <p><strong>Current Custodian Address:</strong><br>
+                    <span class="address-mono">${currentOwner}</span>
+                </p>
+                <p style="margin-top:10px; margin-bottom:6px; font-weight:600; font-size:12px;
+                        color:#6B82A0; text-transform:uppercase; letter-spacing:0.8px;">
+                    Full Custody Trail (raw addresses)
+                </p>
+                ${trailHTML || '<div style="font-size:12px;color:#6B82A0;">No transfers recorded yet.</div>'}
+            `;
+
+        } catch(error) {
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = '<p style="color:#C0392B;">Batch not found or contract error. Check the Batch ID.</p>';
+            console.error('getManufacturerAddress error:', error);
+        }
+    }
     </script>
 
 </body>
-
 </html>
 Owner (5).html
 13 KB

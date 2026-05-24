@@ -25,6 +25,23 @@
         header h1 { font-size: 22px; font-weight: 600; }
         header p  { font-size: 13px; color: #A8C4E0; margin-top: 4px; }
 
+        .btn-back {
+            position: absolute;
+            left: 24px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: inline-block;
+            padding: 6px 14px;
+            background: rgba(255,255,255,0.12);
+            color: #ffffff;
+            font-size: 12px;
+            font-weight: 600;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            text-decoration: none;
+            border-radius: 5px;
+            border: 1px solid rgba(255,255,255,0.25);
+            letter-spacing: 0.3px;
+        }
         .container {
             max-width: 720px;
             margin: 36px auto;
@@ -159,7 +176,9 @@
 
 <body>
 
-    <header>
+    
+    <header style="position: relative;">
+        <a href="index.html" class="btn-back">← Back to Home</a>
         <h1>Origin Pharm</h1>
         <p>Consumer / Regulatory Authority — Batch Verification</p>
     </header>
@@ -191,10 +210,6 @@
             window.ethereum.enable()
                 .then(function (accounts) {
                     web3.eth.defaultAccount = accounts[0];
-                    console.log("Default account set:", web3.eth.defaultAccount);
-                    web3.eth.getAccounts()
-                        .then(function (accounts) { console.log(accounts); })
-                        .catch(function (error) { console.error(error); });
                 })
                 .catch(function (error) { console.error(error); });
         } else if (typeof window.web3 !== 'undefined') {
@@ -203,16 +218,51 @@
             console.log('Non-Ethereum browser detected. Please install MetaMask.');
         }
 
-        // ── UPDATE THIS ADDRESS AFTER REMIX DEPLOYMENT ──────────────────────
+        // ── UPDATE THESE ADDRESSES AFTER REMIX DEPLOYMENT ───────────────────
         const verificationContractAddress = 'PASTE_VERIFICATION_CONTRACT_ADDRESS_HERE';
+        const controlContractAddress      = 'PASTE_CONTROL_CONTRACT_ADDRESS_HERE';
+        const mintContractAddress         = 'PASTE_MINT_CONTRACT_ADDRESS_HERE';
 
         const verificationContractABI = [
             {"inputs":[{"internalType":"uint256","name":"batchId","type":"uint256"}],"name":"batchStatus","outputs":[{"internalType":"string","name":"medicineName","type":"string"},{"internalType":"string","name":"batchNumber","type":"string"},{"internalType":"string","name":"manufacturerName","type":"string"},{"internalType":"address","name":"manufacturer","type":"address"},{"internalType":"uint256","name":"manufactureDate","type":"uint256"},{"internalType":"uint256","name":"expiryDate","type":"uint256"},{"internalType":"string","name":"status","type":"string"},{"internalType":"bool","name":"verified","type":"bool"},{"internalType":"address","name":"currentOwner","type":"address"},{"components":[{"internalType":"address","name":"from","type":"address"},{"internalType":"address","name":"to","type":"address"},{"internalType":"uint8","name":"status","type":"uint8"},{"internalType":"uint256","name":"timestamp","type":"uint256"},{"internalType":"string","name":"notes","type":"string"}],"internalType":"struct CustodyRecord[]","name":"custodyTrail","type":"tuple[]"}],"stateMutability":"view","type":"function"}
         ];
 
+        const controlContractABI = [
+            {"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"authorisedDistributors","outputs":[{"internalType":"bool","name":"isAuthorised","type":"bool"},{"internalType":"string","name":"name","type":"string"}],"stateMutability":"view","type":"function"},
+            {"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"authorisedPharmacies","outputs":[{"internalType":"bool","name":"isAuthorised","type":"bool"},{"internalType":"string","name":"name","type":"string"}],"stateMutability":"view","type":"function"}
+        ];
+
+        const mintContractABI = [
+            {"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"authorisedManufacturers","outputs":[{"internalType":"bool","name":"isAuthorised","type":"bool"},{"internalType":"string","name":"name","type":"string"}],"stateMutability":"view","type":"function"}
+        ];
+
         const verificationContract = new web3.eth.Contract(verificationContractABI, verificationContractAddress);
+        const controlContract      = new web3.eth.Contract(controlContractABI,      controlContractAddress);
+        const mintContract         = new web3.eth.Contract(mintContractABI,         mintContractAddress);
 
         const statusLabels = ['Produced', 'Released', 'InTransit', 'Received'];
+
+        async function resolvePartyName(address) {
+            const ZERO = '0x0000000000000000000000000000000000000000';
+            if (!address || address === ZERO) return 'Origin Pharm (System)';
+
+            try {
+                const mfr = await mintContract.methods.authorisedManufacturers(address).call();
+                if (mfr && mfr.name && mfr.name.length > 0) return mfr.name;
+            } catch(e) {}
+
+            try {
+                const dist = await controlContract.methods.authorisedDistributors(address).call();
+                if (dist && dist.name && dist.name.length > 0) return dist.name;
+            } catch(e) {}
+
+            try {
+                const ph = await controlContract.methods.authorisedPharmacies(address).call();
+                if (ph && ph.name && ph.name.length > 0) return ph.name;
+            } catch(e) {}
+
+            return 'Unknown';
+        }
 
         async function getBatchStatus() {
             const batchId = document.getElementById('batchId').value;
@@ -222,7 +272,6 @@
             const medicineName     = result[0];
             const batchNumber      = result[1];
             const manufacturerName = result[2];
-            const manufacturer     = result[3];
             const manufactureDate  = new Date(result[4] * 1000).toLocaleDateString('en-AU');
             const expiryDate       = new Date(result[5] * 1000).toLocaleDateString('en-AU');
             const status           = result[6];
@@ -230,16 +279,26 @@
             const currentOwner     = result[8];
             const custodyTrail     = result[9];
 
+            const currentOwnerName = await resolvePartyName(currentOwner);
+
             const verifiedBadge = verified
                 ? '<span class="verified-yes">✓ Verified</span>'
                 : '<span class="verified-no">⏳ Not Yet Verified</span>';
 
             let trailHTML = '';
-            custodyTrail.forEach(function(rec, i) {
+            for (let i = 0; i < custodyTrail.length; i++) {
+                const rec       = custodyTrail[i];
                 const recStatus = statusLabels[rec.status] || rec.status;
-                const ts = new Date(rec.timestamp * 1000).toLocaleDateString('en-AU');
-                trailHTML += `<div class="trail-item"><strong>${i+1}. ${recStatus}</strong> — ${rec.from.slice(0,6)}...${rec.from.slice(-4)} → ${rec.to.slice(0,6)}...${rec.to.slice(-4)} &nbsp;·&nbsp; ${ts}${rec.notes ? ' · ' + rec.notes : ''}</div>`;
-            });
+                const ts        = new Date(rec.timestamp * 1000).toLocaleDateString('en-AU');
+                const fromName  = await resolvePartyName(rec.from);
+                const toName    = await resolvePartyName(rec.to);
+                trailHTML += `<div class="trail-item">
+                    <strong>${i + 1}. ${recStatus}</strong>
+                    &nbsp;·&nbsp; ${fromName} → ${toName}
+                    &nbsp;·&nbsp; ${ts}
+                    ${rec.notes ? ' · ' + rec.notes : ''}
+                </div>`;
+            }
 
             const resultDiv = document.getElementById('batchStatusResult');
             resultDiv.style.display = 'block';
@@ -247,18 +306,16 @@
                 <p><strong>Medicine:</strong> ${medicineName}</p>
                 <p><strong>Batch Reference:</strong> ${batchNumber}</p>
                 <p><strong>Manufacturer:</strong> ${manufacturerName}</p>
-                <p><strong>Manufacturer Address:</strong> ${manufacturer}</p>
                 <p><strong>Manufacture Date:</strong> ${manufactureDate}</p>
                 <p><strong>Expiry Date:</strong> ${expiryDate}</p>
                 <p><strong>Status:</strong> ${status}</p>
                 <p><strong>Verified:</strong> ${verifiedBadge}</p>
-                <p><strong>Current Custodian:</strong> ${currentOwner}</p>
+                <p><strong>Current Custodian:</strong> ${currentOwnerName}</p>
                 <p style="margin-top:10px;margin-bottom:6px;font-weight:600;font-size:12px;color:#6B82A0;text-transform:uppercase;letter-spacing:0.8px;">Custody Trail</p>
                 ${trailHTML || '<div class="trail-item">No transfers recorded yet.</div>'}
             `;
         }
 
-        // Auto-load if batchId passed in URL e.g. Consumer.html?batch=1
         window.addEventListener('load', function() {
             var params  = new URLSearchParams(window.location.search);
             var batchId = params.get('batch');

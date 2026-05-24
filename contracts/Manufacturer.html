@@ -25,6 +25,25 @@
         header h1 { font-size: 22px; font-weight: 600; }
         header p  { font-size: 13px; color: #A8C4E0; margin-top: 4px; }
 
+
+        .btn-back {
+            position: absolute;
+            left: 24px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: inline-block;
+            padding: 6px 14px;
+            background: rgba(255,255,255,0.12);
+            color: #ffffff;
+            font-size: 12px;
+            font-weight: 600;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            text-decoration: none;
+            border-radius: 5px;
+            border: 1px solid rgba(255,255,255,0.25);
+            letter-spacing: 0.3px;
+        }
+
         .container {
             max-width: 720px;
             margin: 36px auto;
@@ -125,7 +144,8 @@
 
 <body>
 
-    <header>
+    <header style="position: relative;">
+        <a href="index.html" class="btn-back">← Back to Home</a>
         <h1>Origin Pharm</h1>
         <p>Manufacturer Portal</p>
     </header>
