@@ -1,0 +1,25 @@
+{
+  "name": "origin_pharm",
+  "version": "1.0.0",
+  "description": "OriginPharm is a Solidity smart contract system that tracks pharmaceutical batches across the supply chain — from manufacturer to distributor to pharmacy. Each batch is represented by a unique on-chain token. As custody transfers between stakeholders, every handoff is recorded immutably, creating a verifiable audit trail. Regulators, pharmacies, and consumers can query any batch at any time to confirm it originates from an authorised manufacturer and has followed a legitimate supply chain pathway.",
+  "main": "index.js",
+  "devDependencies": {
+    "lite-server": "^2.6.1",
+    "moment": "^2.30.1"
+  },
+  "scripts": {
+    "dev": "lite-server"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zoeydarcy/origin_pharm.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/zoeydarcy/origin_pharm/issues"
+  },
+  "homepage": "https://github.com/zoeydarcy/origin_pharm#readme"
+}
