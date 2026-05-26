@@ -295,172 +295,950 @@
         }
 
         // ── UPDATE THESE ADDRESSES AFTER REMIX DEPLOYMENT ──────────────────
-        const mintContractAddress    = '0x84C8c652977a6BCF59Fa3F8f789990f3F9eFb692';
-        const controlContractAddress = '0xbB676cf90452F1d112208f8dA1a3D0024Bb37a6b';
+        const mintContractAddress = 'PASTE_VERIFICATION_CONTRACT_ADDRESS_HERE';
+        const controlContractAddress = 'PASTE_VERIFICATION_CONTRACT_ADDRESS_HERE';
+        const verificationContractAddress = 'PASTE_VERIFICATION_CONTRACT_ADDRESS_HERE';
 
+
+        // ABIs for each of the contracts above 
         const mintContractABI = [
-            {"inputs":[{"internalType":"address","name":"manufacturer","type":"address"},{"internalType":"string","name":"name","type":"string"}],"name":"authoriseManufacturer","outputs":[],"stateMutability":"nonpayable","type":"function"},
-            {"inputs":[{"internalType":"address","name":"manufacturer","type":"address"}],"name":"revokeManufacturer","outputs":[],"stateMutability":"nonpayable","type":"function"},
-            {"inputs":[{"internalType":"address","name":"_controlContractAddress","type":"address"}],"name":"setControlContract","outputs":[],"stateMutability":"nonpayable","type":"function"},
-            {"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"authorisedManufacturers","outputs":[{"internalType":"bool","name":"isAuthorised","type":"bool"},{"internalType":"string","name":"name","type":"string"}],"stateMutability":"view","type":"function"}
+            {
+                "inputs": [],
+                "stateMutability": "nonpayable",
+                "type": "constructor"
+            },
+            {
+                "anonymous": false,
+                "inputs": [
+                    {
+                        "indexed": true,
+                        "internalType": "uint256",
+                        "name": "batchId",
+                        "type": "uint256"
+                    },
+                    {
+                        "indexed": true,
+                        "internalType": "address",
+                        "name": "manufacturer",
+                        "type": "address"
+                    },
+                    {
+                        "indexed": false,
+                        "internalType": "string",
+                        "name": "manufacturerName",
+                        "type": "string"
+                    },
+                    {
+                        "indexed": false,
+                        "internalType": "string",
+                        "name": "medicineName",
+                        "type": "string"
+                    },
+                    {
+                        "indexed": false,
+                        "internalType": "string",
+                        "name": "batchNumber",
+                        "type": "string"
+                    },
+                    {
+                        "indexed": false,
+                        "internalType": "uint256",
+                        "name": "expiryDate",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "BatchMinted",
+                "type": "event"
+            },
+            {
+                "anonymous": false,
+                "inputs": [
+                    {
+                        "indexed": true,
+                        "internalType": "uint256",
+                        "name": "batchId",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "BatchVerified",
+                "type": "event"
+            },
+            {
+                "anonymous": false,
+                "inputs": [
+                    {
+                        "indexed": true,
+                        "internalType": "address",
+                        "name": "controlContract",
+                        "type": "address"
+                    }
+                ],
+                "name": "ControlContractSet",
+                "type": "event"
+            },
+            {
+                "anonymous": false,
+                "inputs": [
+                    {
+                        "indexed": true,
+                        "internalType": "address",
+                        "name": "manufacturer",
+                        "type": "address"
+                    },
+                    {
+                        "indexed": false,
+                        "internalType": "string",
+                        "name": "name",
+                        "type": "string"
+                    }
+                ],
+                "name": "ManufacturerAuthorised",
+                "type": "event"
+            },
+            {
+                "anonymous": false,
+                "inputs": [
+                    {
+                        "indexed": true,
+                        "internalType": "address",
+                        "name": "manufacturer",
+                        "type": "address"
+                    }
+                ],
+                "name": "ManufacturerRevoked",
+                "type": "event"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "manufacturer",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "string",
+                        "name": "name",
+                        "type": "string"
+                    }
+                ],
+                "name": "authoriseManufacturer",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "",
+                        "type": "address"
+                    }
+                ],
+                "name": "authorisedManufacturers",
+                "outputs": [
+                    {
+                        "internalType": "bool",
+                        "name": "isAuthorised",
+                        "type": "bool"
+                    },
+                    {
+                        "internalType": "string",
+                        "name": "name",
+                        "type": "string"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "batchId",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "batchExists",
+                "outputs": [
+                    {
+                        "internalType": "bool",
+                        "name": "",
+                        "type": "bool"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "controlContractAddress",
+                "outputs": [
+                    {
+                        "internalType": "address",
+                        "name": "",
+                        "type": "address"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "batchId",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "getBatch",
+                "outputs": [
+                    {
+                        "components": [
+                            {
+                                "internalType": "uint256",
+                                "name": "batchId",
+                                "type": "uint256"
+                            },
+                            {
+                                "internalType": "string",
+                                "name": "medicineName",
+                                "type": "string"
+                            },
+                            {
+                                "internalType": "string",
+                                "name": "batchNumber",
+                                "type": "string"
+                            },
+                            {
+                                "internalType": "string",
+                                "name": "manufacturerName",
+                                "type": "string"
+                            },
+                            {
+                                "internalType": "uint256",
+                                "name": "manufactureDate",
+                                "type": "uint256"
+                            },
+                            {
+                                "internalType": "uint256",
+                                "name": "expiryDate",
+                                "type": "uint256"
+                            },
+                            {
+                                "internalType": "address",
+                                "name": "manufacturer",
+                                "type": "address"
+                            },
+                            {
+                                "internalType": "enum BatchStatus",
+                                "name": "status",
+                                "type": "uint8"
+                            },
+                            {
+                                "internalType": "bool",
+                                "name": "verified",
+                                "type": "bool"
+                            }
+                        ],
+                        "internalType": "struct BatchData",
+                        "name": "",
+                        "type": "tuple"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "manufacturer",
+                        "type": "address"
+                    }
+                ],
+                "name": "getManufacturerName",
+                "outputs": [
+                    {
+                        "internalType": "string",
+                        "name": "",
+                        "type": "string"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "string",
+                        "name": "medicineName",
+                        "type": "string"
+                    },
+                    {
+                        "internalType": "string",
+                        "name": "batchNumber",
+                        "type": "string"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "expiryDate",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "mintBatch",
+                "outputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "batchId",
+                        "type": "uint256"
+                    }
+                ],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "owner",
+                "outputs": [
+                    {
+                        "internalType": "address",
+                        "name": "",
+                        "type": "address"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "manufacturer",
+                        "type": "address"
+                    }
+                ],
+                "name": "revokeManufacturer",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "_controlContractAddress",
+                        "type": "address"
+                    }
+                ],
+                "name": "setControlContract",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "batchId",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "setVerified",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "batchId",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "enum BatchStatus",
+                        "name": "newStatus",
+                        "type": "uint8"
+                    }
+                ],
+                "name": "updateStatus",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            }
         ];
 
         const controlContractABI = [
-            {"inputs":[{"internalType":"address","name":"distributor","type":"address"},{"internalType":"string","name":"name","type":"string"}],"name":"authoriseDistributor","outputs":[],"stateMutability":"nonpayable","type":"function"},
-            {"inputs":[{"internalType":"address","name":"distributor","type":"address"}],"name":"revokeDistributor","outputs":[],"stateMutability":"nonpayable","type":"function"},
-            {"inputs":[{"internalType":"address","name":"pharmacy","type":"address"},{"internalType":"string","name":"name","type":"string"}],"name":"authorisePharmacy","outputs":[],"stateMutability":"nonpayable","type":"function"},
-            {"inputs":[{"internalType":"address","name":"pharmacy","type":"address"}],"name":"revokePharmacy","outputs":[],"stateMutability":"nonpayable","type":"function"},
-            {"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"authorisedDistributors","outputs":[{"internalType":"bool","name":"isAuthorised","type":"bool"},{"internalType":"string","name":"name","type":"string"}],"stateMutability":"view","type":"function"},
-            {"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"authorisedPharmacies","outputs":[{"internalType":"bool","name":"isAuthorised","type":"bool"},{"internalType":"string","name":"name","type":"string"}],"stateMutability":"view","type":"function"}
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "mintContractAddress",
+                        "type": "address"
+                    }
+                ],
+                "stateMutability": "nonpayable",
+                "type": "constructor"
+            },
+            {
+                "anonymous": false,
+                "inputs": [
+                    {
+                        "indexed": true,
+                        "internalType": "uint256",
+                        "name": "batchId",
+                        "type": "uint256"
+                    },
+                    {
+                        "indexed": true,
+                        "internalType": "address",
+                        "name": "pharmacy",
+                        "type": "address"
+                    },
+                    {
+                        "indexed": false,
+                        "internalType": "uint256",
+                        "name": "timestamp",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "BatchReceived",
+                "type": "event"
+            },
+            {
+                "anonymous": false,
+                "inputs": [
+                    {
+                        "indexed": true,
+                        "internalType": "uint256",
+                        "name": "batchId",
+                        "type": "uint256"
+                    },
+                    {
+                        "indexed": true,
+                        "internalType": "address",
+                        "name": "manufacturer",
+                        "type": "address"
+                    },
+                    {
+                        "indexed": true,
+                        "internalType": "address",
+                        "name": "distributor",
+                        "type": "address"
+                    },
+                    {
+                        "indexed": false,
+                        "internalType": "uint256",
+                        "name": "timestamp",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "BatchReleased",
+                "type": "event"
+            },
+            {
+                "anonymous": false,
+                "inputs": [
+                    {
+                        "indexed": true,
+                        "internalType": "uint256",
+                        "name": "batchId",
+                        "type": "uint256"
+                    },
+                    {
+                        "indexed": true,
+                        "internalType": "address",
+                        "name": "distributor",
+                        "type": "address"
+                    },
+                    {
+                        "indexed": true,
+                        "internalType": "address",
+                        "name": "pharmacy",
+                        "type": "address"
+                    },
+                    {
+                        "indexed": false,
+                        "internalType": "string",
+                        "name": "notes",
+                        "type": "string"
+                    },
+                    {
+                        "indexed": false,
+                        "internalType": "uint256",
+                        "name": "timestamp",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "BatchShipped",
+                "type": "event"
+            },
+            {
+                "anonymous": false,
+                "inputs": [
+                    {
+                        "indexed": true,
+                        "internalType": "address",
+                        "name": "distributor",
+                        "type": "address"
+                    },
+                    {
+                        "indexed": false,
+                        "internalType": "string",
+                        "name": "name",
+                        "type": "string"
+                    }
+                ],
+                "name": "DistributorAuthorised",
+                "type": "event"
+            },
+            {
+                "anonymous": false,
+                "inputs": [
+                    {
+                        "indexed": true,
+                        "internalType": "address",
+                        "name": "distributor",
+                        "type": "address"
+                    }
+                ],
+                "name": "DistributorRevoked",
+                "type": "event"
+            },
+            {
+                "anonymous": false,
+                "inputs": [
+                    {
+                        "indexed": true,
+                        "internalType": "address",
+                        "name": "pharmacy",
+                        "type": "address"
+                    },
+                    {
+                        "indexed": false,
+                        "internalType": "string",
+                        "name": "name",
+                        "type": "string"
+                    }
+                ],
+                "name": "PharmacyAuthorised",
+                "type": "event"
+            },
+            {
+                "anonymous": false,
+                "inputs": [
+                    {
+                        "indexed": true,
+                        "internalType": "address",
+                        "name": "pharmacy",
+                        "type": "address"
+                    }
+                ],
+                "name": "PharmacyRevoked",
+                "type": "event"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "distributor",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "string",
+                        "name": "name",
+                        "type": "string"
+                    }
+                ],
+                "name": "authoriseDistributor",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "pharmacy",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "string",
+                        "name": "name",
+                        "type": "string"
+                    }
+                ],
+                "name": "authorisePharmacy",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "",
+                        "type": "address"
+                    }
+                ],
+                "name": "authorisedDistributors",
+                "outputs": [
+                    {
+                        "internalType": "bool",
+                        "name": "isAuthorised",
+                        "type": "bool"
+                    },
+                    {
+                        "internalType": "string",
+                        "name": "name",
+                        "type": "string"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "",
+                        "type": "address"
+                    }
+                ],
+                "name": "authorisedPharmacies",
+                "outputs": [
+                    {
+                        "internalType": "bool",
+                        "name": "isAuthorised",
+                        "type": "bool"
+                    },
+                    {
+                        "internalType": "string",
+                        "name": "name",
+                        "type": "string"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "currentCustodian",
+                "outputs": [
+                    {
+                        "internalType": "address",
+                        "name": "",
+                        "type": "address"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "batchId",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "getCustodyHistory",
+                "outputs": [
+                    {
+                        "components": [
+                            {
+                                "internalType": "address",
+                                "name": "from",
+                                "type": "address"
+                            },
+                            {
+                                "internalType": "address",
+                                "name": "to",
+                                "type": "address"
+                            },
+                            {
+                                "internalType": "enum BatchStatus",
+                                "name": "status",
+                                "type": "uint8"
+                            },
+                            {
+                                "internalType": "uint256",
+                                "name": "timestamp",
+                                "type": "uint256"
+                            },
+                            {
+                                "internalType": "string",
+                                "name": "notes",
+                                "type": "string"
+                            }
+                        ],
+                        "internalType": "struct CustodyRecord[]",
+                        "name": "",
+                        "type": "tuple[]"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "mintContract",
+                "outputs": [
+                    {
+                        "internalType": "contract MintContract",
+                        "name": "",
+                        "type": "address"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "owner",
+                "outputs": [
+                    {
+                        "internalType": "address",
+                        "name": "",
+                        "type": "address"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "batchId",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "receipt",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "batchId",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "address",
+                        "name": "distributor",
+                        "type": "address"
+                    }
+                ],
+                "name": "release",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "distributor",
+                        "type": "address"
+                    }
+                ],
+                "name": "revokeDistributor",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "pharmacy",
+                        "type": "address"
+                    }
+                ],
+                "name": "revokePharmacy",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "batchId",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "address",
+                        "name": "pharmacy",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "string",
+                        "name": "notes",
+                        "type": "string"
+                    }
+                ],
+                "name": "shipment",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            }
         ];
 
         const mintContract = new web3.eth.Contract(mintContractABI,    mintContractAddress);
         const controlContract = new web3.eth.Contract(controlContractABI, controlContractAddress);
 
-    const verificationContractAddress = 'PASTE_VERIFICATION_CONTRACT_ADDRESS_HERE';
+    
 
     const verificationContractABI = [
-    [
-        {
-            "inputs": [
-                {
-                    "internalType": "address",
-                    "name": "mintContractAddress",
-                    "type": "address"
-                },
-                {
-                    "internalType": "address",
-                    "name": "controlContractAddress",
-                    "type": "address"
-                }
-            ],
-            "stateMutability": "nonpayable",
-            "type": "constructor"
-        },
-        {
-            "inputs": [
-                {
-                    "internalType": "uint256",
-                    "name": "batchId",
-                    "type": "uint256"
-                }
-            ],
-            "name": "batchStatus",
-            "outputs": [
-                {
-                    "internalType": "string",
-                    "name": "medicineName",
-                    "type": "string"
-                },
-                {
-                    "internalType": "string",
-                    "name": "batchNumber",
-                    "type": "string"
-                },
-                {
-                    "internalType": "string",
-                    "name": "manufacturerName",
-                    "type": "string"
-                },
-                {
-                    "internalType": "address",
-                    "name": "manufacturer",
-                    "type": "address"
-                },
-                {
-                    "internalType": "uint256",
-                    "name": "manufactureDate",
-                    "type": "uint256"
-                },
-                {
-                    "internalType": "uint256",
-                    "name": "expiryDate",
-                    "type": "uint256"
-                },
-                {
-                    "internalType": "string",
-                    "name": "status",
-                    "type": "string"
-                },
-                {
-                    "internalType": "bool",
-                    "name": "verified",
-                    "type": "bool"
-                },
-                {
-                    "internalType": "address",
-                    "name": "currentOwner",
-                    "type": "address"
-                },
-                {
-                    "components": [
-                        {
-                            "internalType": "address",
-                            "name": "from",
-                            "type": "address"
-                        },
-                        {
-                            "internalType": "address",
-                            "name": "to",
-                            "type": "address"
-                        },
-                        {
-                            "internalType": "enum BatchStatus",
-                            "name": "status",
-                            "type": "uint8"
-                        },
-                        {
-                            "internalType": "uint256",
-                            "name": "timestamp",
-                            "type": "uint256"
-                        },
-                        {
-                            "internalType": "string",
-                            "name": "notes",
-                            "type": "string"
-                        }
-                    ],
-                    "internalType": "struct CustodyRecord[]",
-                    "name": "custodyTrail",
-                    "type": "tuple[]"
-                }
-            ],
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "inputs": [],
-            "name": "controlContract",
-            "outputs": [
-                {
-                    "internalType": "contract ControlContract",
-                    "name": "",
-                    "type": "address"
-                }
-            ],
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "inputs": [],
-            "name": "mintContract",
-            "outputs": [
-                {
-                    "internalType": "contract MintContract",
-                    "name": "",
-                    "type": "address"
-                }
-            ],
-            "stateMutability": "view",
-            "type": "function"
-        }
-    ]
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "mintContractAddress",
+				"type": "address"
+			},
+			{
+				"internalType": "address",
+				"name": "controlContractAddress",
+				"type": "address"
+			}
+		],
+		"stateMutability": "nonpayable",
+		"type": "constructor"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "batchId",
+				"type": "uint256"
+			}
+		],
+		"name": "batchStatus",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "medicineName",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "batchNumber",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "manufacturerName",
+				"type": "string"
+			},
+			{
+				"internalType": "address",
+				"name": "manufacturer",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "manufactureDate",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "expiryDate",
+				"type": "uint256"
+			},
+			{
+				"internalType": "string",
+				"name": "status",
+				"type": "string"
+			},
+			{
+				"internalType": "bool",
+				"name": "verified",
+				"type": "bool"
+			},
+			{
+				"internalType": "address",
+				"name": "currentOwner",
+				"type": "address"
+			},
+			{
+				"components": [
+					{
+						"internalType": "address",
+						"name": "from",
+						"type": "address"
+					},
+					{
+						"internalType": "address",
+						"name": "to",
+						"type": "address"
+					},
+					{
+						"internalType": "enum BatchStatus",
+						"name": "status",
+						"type": "uint8"
+					},
+					{
+						"internalType": "uint256",
+						"name": "timestamp",
+						"type": "uint256"
+					},
+					{
+						"internalType": "string",
+						"name": "notes",
+						"type": "string"
+					}
+				],
+				"internalType": "struct CustodyRecord[]",
+				"name": "custodyTrail",
+				"type": "tuple[]"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "controlContract",
+		"outputs": [
+			{
+				"internalType": "contract ControlContract",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "mintContract",
+		"outputs": [
+			{
+				"internalType": "contract MintContract",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	}
 ];
 
         const verificationContract = new web3.eth.Contract(verificationContractABI, verificationContractAddress);
 
 
-        // ── Error helpers ────────────────────────────────────────────────────
+// ERROR/FEEDBACK-LOOP HELPERS
         function parseContractError(error) {
             const msg = error?.message || '';
             const match = msg.match(/reason string '(.+?)'/i)
@@ -484,9 +1262,8 @@
             el.style.display = 'block';
             document.getElementById(id.replace('Success', 'Error')).style.display = 'none';
         }
-        // ── End error helpers ─────────────────────────────────────────────────
 
-        
+
         async function setControlContract() {
             const addr = document.getElementById('controlContractAddr').value.trim();
             if (!addr || !addr.startsWith('0x') || addr.length !== 42) {
@@ -505,7 +1282,7 @@
 
         async function authoriseManufacturer() {
             const address = document.getElementById('mfrAddress').value.trim();
-            const name    = document.getElementById('mfrName').value.trim();
+            const name = document.getElementById('mfrName').value.trim();
             if (!address || !address.startsWith('0x') || address.length !== 42) {
                 showError('mfrAuthError', 'Invalid input — please enter a valid wallet address.');
                 return;
@@ -542,7 +1319,7 @@
 
         async function authoriseDistributor() {
             const address = document.getElementById('distAddress').value.trim();
-            const name    = document.getElementById('distName').value.trim();
+            const name = document.getElementById('distName').value.trim();
             if (!address || !address.startsWith('0x') || address.length !== 42) {
                 showError('distAuthError', 'Invalid input — please enter a valid wallet address.');
                 return;
@@ -579,7 +1356,7 @@
 
         async function authorisePharmacy() {
             const address = document.getElementById('phAddress').value.trim();
-            const name    = document.getElementById('phName').value.trim();
+            const name = document.getElementById('phName').value.trim();
             if (!address || !address.startsWith('0x') || address.length !== 42) {
                 showError('phAuthError', 'Invalid input — please enter a valid wallet address.');
                 return;
@@ -615,7 +1392,7 @@
         }
 
         async function lookupParticipant() {
-            const address   = document.getElementById('lookupAddress').value.trim();
+            const address = document.getElementById('lookupAddress').value.trim();
             const resultDiv = document.getElementById('lookupResult');
 
             if (!address || !address.startsWith('0x') || address.length !== 42) {
@@ -635,7 +1412,7 @@
                 ]);
 
                 let found = false;
-                let html  = '';
+                let html = '';
 
                 if (mfrResult && mfrResult.isAuthorised) {
                     found = true;
@@ -651,12 +1428,12 @@
                 }
 
                 if (!found) {
-                    const revokedMfr  = mfrResult  && !mfrResult.isAuthorised  && mfrResult.name  && mfrResult.name.length  > 0;
+                    const revokedMfr = mfrResult  && !mfrResult.isAuthorised  && mfrResult.name  && mfrResult.name.length  > 0;
                     const revokedDist = distResult && !distResult.isAuthorised && distResult.name && distResult.name.length > 0;
-                    const revokedPh   = phResult   && !phResult.isAuthorised   && phResult.name   && phResult.name.length   > 0;
-                    if (revokedMfr)  html += buildResultCard('Manufacturer', mfrResult.name,  address, false);
+                    const revokedPh = phResult  && !phResult.isAuthorised  && phResult.name  && phResult.name.length   > 0;
+                    if (revokedMfr) html += buildResultCard('Manufacturer', mfrResult.name,  address, false);
                     if (revokedDist) html += buildResultCard('Distributor',  distResult.name, address, false);
-                    if (revokedPh)   html += buildResultCard('Pharmacy',     phResult.name,   address, false);
+                    if (revokedPh) html += buildResultCard('Pharmacy', phResult.name,   address, false);
                 }
 
                 if (!found && html === '') {
@@ -690,154 +1467,6 @@
                 </div>`;
         }
 
-
-
-
-        // async function setControlContract() {
-        //     const addr = document.getElementById('controlContractAddr').value;
-        //     await mintContract.methods.setControlContract(addr)
-        //         .send({ from: web3.eth.defaultAccount })
-        //         .on('transactionHash', function(hash) { console.log('TX Hash:', hash); })
-        //         .on('confirmation', function(num, receipt) { console.log('Confirmed:', receipt); });
-        //     alert('ControlContract wired successfully!');
-        // }
-
-        // async function authoriseManufacturer() {
-        //     const address = document.getElementById('mfrAddress').value;
-        //     const name    = document.getElementById('mfrName').value;
-        //     await mintContract.methods.authoriseManufacturer(address, name)
-        //         .send({ from: web3.eth.defaultAccount })
-        //         .on('transactionHash', function(hash) { console.log('TX Hash:', hash); });
-        //     alert('Manufacturer authorised: ' + name);
-        // }
-
-        // async function revokeManufacturer() {
-        //     const address = document.getElementById('mfrRevokeAddress').value;
-        //     await mintContract.methods.revokeManufacturer(address)
-        //         .send({ from: web3.eth.defaultAccount })
-        //         .on('transactionHash', function(hash) { console.log('TX Hash:', hash); });
-        //     alert('Manufacturer revoked.');
-        // }
-
-        // async function authoriseDistributor() {
-        //     const address = document.getElementById('distAddress').value;
-        //     const name    = document.getElementById('distName').value;
-        //     await controlContract.methods.authoriseDistributor(address, name)
-        //         .send({ from: web3.eth.defaultAccount })
-        //         .on('transactionHash', function(hash) { console.log('TX Hash:', hash); });
-        //     alert('Distributor authorised: ' + name);
-        // }
-
-        // async function revokeDistributor() {
-        //     const address = document.getElementById('distRevokeAddress').value;
-        //     await controlContract.methods.revokeDistributor(address)
-        //         .send({ from: web3.eth.defaultAccount })
-        //         .on('transactionHash', function(hash) { console.log('TX Hash:', hash); });
-        //     alert('Distributor revoked.');
-        // }
-
-        // async function authorisePharmacy() {
-        //     const address = document.getElementById('phAddress').value;
-        //     const name = document.getElementById('phName').value;
-        //     await controlContract.methods.authorisePharmacy(address, name)
-        //         .send({ from: web3.eth.defaultAccount })
-        //         .on('transactionHash', function(hash) { console.log('TX Hash:', hash); });
-        //     alert('Pharmacy authorised: ' + name);
-        // }
-
-        // async function revokePharmacy() {
-        //     const address = document.getElementById('phRevokeAddress').value;
-        //     await controlContract.methods.revokePharmacy(address)
-        //         .send({ from: web3.eth.defaultAccount })
-        //         .on('transactionHash', function(hash) { console.log('TX Hash:', hash); });
-        //     alert('Pharmacy revoked.');
-        // }
-
-
-        // async function lookupParticipant() {
-        //     const address   = document.getElementById('lookupAddress').value.trim();
-        //     const resultDiv = document.getElementById('lookupResult');
-
-        //     if (!address || !address.startsWith('0x')) {
-        //         resultDiv.style.display = 'block';
-        //         resultDiv.innerHTML = '<p style="color:#C0392B;">Please enter a valid wallet address starting with 0x.</p>';
-        //         return;
-        //     }
-
-        //     resultDiv.style.display = 'block';
-        //     resultDiv.innerHTML = '<p style="color:#6B82A0;">Checking registries...</p>';
-
-        //     try {
-        //         // Check all three registries in parallel
-        //         const [mfrResult, distResult, phResult] = await Promise.all([
-        //             mintContract.methods.authorisedManufacturers(address).call().catch(() => null),
-        //             controlContract.methods.authorisedDistributors(address).call().catch(() => null),
-        //             controlContract.methods.authorisedPharmacies(address).call().catch(() => null)
-        //         ]);
-
-        //         let found = false;
-        //         let html  = '';
-
-        //         if (mfrResult && mfrResult.isAuthorised) {
-        //             found = true;
-        //             html += buildResultCard('Manufacturer', mfrResult.name, address, true);
-        //         }
-
-        //         if (distResult && distResult.isAuthorised) {
-        //             found = true;
-        //             html += buildResultCard('Distributor', distResult.name, address, true);
-        //         }
-
-        //         if (phResult && phResult.isAuthorised) {
-        //             found = true;
-        //             html += buildResultCard('Pharmacy', phResult.name, address, true);
-        //         }
-
-        //         // Check if exists but revoked
-        //         if (!found) {
-        //             const revokedMfr  = mfrResult  && !mfrResult.isAuthorised  && mfrResult.name  && mfrResult.name.length  > 0;
-        //             const revokedDist = distResult && !distResult.isAuthorised && distResult.name && distResult.name.length > 0;
-        //             const revokedPh   = phResult   && !phResult.isAuthorised   && phResult.name   && phResult.name.length   > 0;
-
-        //             if (revokedMfr)  html += buildResultCard('Manufacturer', mfrResult.name,  address, false);
-        //             if (revokedDist) html += buildResultCard('Distributor',  distResult.name, address, false);
-        //             if (revokedPh)   html += buildResultCard('Pharmacy',     phResult.name,   address, false);
-        //         }
-
-        //         if (!found && html === '') {
-        //             resultDiv.innerHTML = `
-        //                 <p style="color:#C0392B; font-size:13px;">
-        //                     This address is not registered in any participant registry.
-        //                 </p>
-        //                 <p style="font-size:12px; color:#6B82A0; margin-top:6px;">
-        //                     Address checked: <span class="address-mono">${address}</span>
-        //                 </p>`;
-        //         } else {
-        //             resultDiv.innerHTML = html;
-        //         }
-
-        //     } catch(error) {
-        //         resultDiv.innerHTML = '<p style="color:#C0392B;">Lookup failed. Check the address and try again.</p>';
-        //         console.error('lookupParticipant error:', error);
-        //     }
-        // }
-
-        // function buildResultCard(role, name, address, isAuthorised) {
-        //     const badge = isAuthorised
-        //         ? '<span style="background:#E6F5EE; color:#0A7A4C; border-radius:12px; padding:2px 10px; font-size:11px; font-weight:700;">✓ Authorised</span>'
-        //         : '<span style="background:#FDECEA; color:#C0392B; border-radius:12px; padding:2px 10px; font-size:11px; font-weight:700;">✗ Revoked</span>';
-
-        //     return `
-        //         <div style="background:#F8FAFD; border:1px solid #D6E0EF; border-radius:6px; padding:12px 14px; margin-bottom:10px;">
-        //             <p style="font-size:11px; font-weight:700; color:#6B82A0; text-transform:uppercase;
-        //                     letter-spacing:0.8px; margin-bottom:8px;">${role}</p>
-        //             <p style="margin-bottom:6px;"><strong>Registered Name:</strong> ${name}</p>
-        //             <p style="margin-bottom:6px;"><strong>Status:</strong> ${badge}</p>
-        //             <p style="margin-bottom:0;"><strong>Wallet Address:</strong><br>
-        //                 <span class="address-mono">${address}</span>
-        //             </p>
-        //         </div>`;
-        // }
     </script>
 
 </body>
