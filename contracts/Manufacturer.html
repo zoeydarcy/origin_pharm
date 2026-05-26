@@ -180,10 +180,10 @@
             <input type="text" id="medicineName" placeholder="e.g. Amoxicillin 500mg">
             <label for="batchSize">Units per Batch</label>
             <input type="text" id="batchSize" placeholder="e.g. 110 units per 1 batch">
-            <p class="hint">A unique Batch ID will be assigned on-chain when the batch is created</p>
             <label for="expiryDate">Expiry Date</label>
             <input type="date" id="expiryDate">
             <button onclick="mintBatch()">Create Batch</button>
+            <p class="hint">A unique Batch ID will be assigned on-chain when the batch is created</p>
             <div id="mintError"   class="error-msg"></div>
             <div id="mintSuccess" class="success-msg"></div>
             <div id="batchIdResult"></div>
