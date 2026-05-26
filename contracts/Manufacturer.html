@@ -43,7 +43,27 @@
             border: 1px solid rgba(255,255,255,0.25);
             letter-spacing: 0.3px;
         }
+        .error-msg {
+            display: none;
+            margin-top: 8px;
+            padding: 8px 12px;
+            background: #FDECEA;
+            border: 1px solid #F7C1C1;
+            border-radius: 5px;
+            font-size: 12px;
+            color: #C0392B;
+        }
 
+        .success-msg {
+            display: none;
+            margin-top: 8px;
+            padding: 8px 12px;
+            background: #E6F5EE;
+            border: 1px solid #C0DD97;
+            border-radius: 5px;
+            font-size: 12px;
+            color: #0A7A4C;
+        }
         .container {
             max-width: 720px;
             margin: 36px auto;
@@ -159,11 +179,13 @@
             <label for="medicineName">Medicine Name</label>
             <input type="text" id="medicineName" placeholder="e.g. Amoxicillin 500mg">
             <label for="batchSize">Batch Size / Reference</label>
-            <input type="text" id="batchSize" placeholder="e.g. BATCH-001">
+            <input type="text" id="batchSize" placeholder="e.g. 110">
             <p class="hint">A unique Batch ID will be assigned on-chain when the batch is created</p>
             <label for="expiryDate">Expiry Date</label>
             <input type="date" id="expiryDate">
             <button onclick="mintBatch()">Create Batch</button>
+            <div id="mintError"   class="error-msg"></div>
+            <div id="mintSuccess" class="success-msg"></div>
             <div id="batchIdResult"></div>
         </div>
 
@@ -176,6 +198,8 @@
             <label for="distributorAddress">Distributor Wallet Address</label>
             <input type="text" id="distributorAddress" placeholder="0x...">
             <button onclick="releaseBatch()">Release Batch</button>
+            <div id="releaseError"   class="error-msg"></div>
+            <div id="releaseSuccess" class="success-msg"></div>
             <div id="productDetails"></div>
         </div>
 
@@ -219,48 +243,142 @@
         const mintContract    = new web3.eth.Contract(mintContractABI,    mintContractAddress);
         const controlContract = new web3.eth.Contract(controlContractABI, controlContractAddress);
 
-        async function mintBatch() {
-            const medicineName = document.getElementById('medicineName').value;
-            const batchSize    = document.getElementById('batchSize').value;
-            const expiryRaw    = document.getElementById('expiryDate').value;
-            const expiryTs     = Math.floor(new Date(expiryRaw).getTime() / 1000);
+        // ── Error helpers ────────────────────────────────────────────────────
+        function parseContractError(error) {
+            const msg = error?.message || '';
+            const match = msg.match(/reason string '(.+?)'/i)
+                    || msg.match(/"message":"(.+?)"/i)
+                    || msg.match(/reverted with reason string "(.+?)"/i);
+            if (match) return match[1];
+            if (msg.includes('User denied')) return 'Transaction cancelled by user.';
+            return 'Transaction failed. Check your role and inputs.';
+        }
 
-            await mintContract.methods.mintBatch(medicineName, batchSize, expiryTs)
-                .send({ from: web3.eth.defaultAccount })
-                .on('transactionHash', function(hash) {
-                    console.log('Transaction Hash:', hash);
-                })
-                .on('receipt', function(receipt) {
-                    console.log('Receipt:', receipt);
-                    // Read batchId from BatchMinted event
-                    const event = receipt.events && receipt.events.BatchMinted;
-                    if (event) {
-                        const batchId = event.returnValues.batchId;
-                        const resultDiv = document.getElementById('batchIdResult');
-                        resultDiv.style.display = 'block';
-                        resultDiv.textContent = 'Batch ID: ' + batchId + ' — record this and include it on the packing slip';
-                        document.getElementById('releaseBatchId').value = batchId;
-                    }
-                })
-                .catch(function(error) { console.error('Error minting batch:', error); });
+        function showError(id, message) {
+            const el = document.getElementById(id);
+            el.textContent = message;
+            el.style.display = 'block';
+            document.getElementById(id.replace('Error', 'Success')).style.display = 'none';
+        }
+
+        function showSuccess(id, message) {
+            const el = document.getElementById(id);
+            el.textContent = message;
+            el.style.display = 'block';
+            document.getElementById(id.replace('Success', 'Error')).style.display = 'none';
+        }
+        // ── End error helpers ─────────────────────────────────────────────────
+        async function mintBatch() {
+            const medicineName = document.getElementById('medicineName').value.trim();
+            const batchSize    = document.getElementById('batchSize').value.trim();
+            const expiryRaw    = document.getElementById('expiryDate').value;
+
+            if (!medicineName) {
+                showError('mintError', 'Invalid input — please enter a medicine name.');
+                return;
+            }
+            if (!batchSize) {
+                showError('mintError', 'Invalid input — please enter a batch reference.');
+                return;
+            }
+            if (!expiryRaw) {
+                showError('mintError', 'Invalid input — please select an expiry date.');
+                return;
+            }
+            const expiryTs = Math.floor(new Date(expiryRaw).getTime() / 1000);
+            if (expiryTs <= Math.floor(Date.now() / 1000)) {
+                showError('mintError', 'Invalid input — expiry date must be in the future.');
+                return;
+            }
+
+            try {
+                await mintContract.methods.mintBatch(medicineName, batchSize, expiryTs)
+                    .send({ from: web3.eth.defaultAccount })
+                    .on('transactionHash', function(hash) { console.log('Transaction Hash:', hash); })
+                    .on('receipt', function(receipt) {
+                        const event = receipt.events && receipt.events.BatchMinted;
+                        if (event) {
+                            const batchId = event.returnValues.batchId;
+                            const resultDiv = document.getElementById('batchIdResult');
+                            resultDiv.style.display = 'block';
+                            resultDiv.textContent = 'Batch ID: ' + batchId + ' — record this and include it on the packing slip';
+                            document.getElementById('releaseBatchId').value = batchId;
+                            showSuccess('mintSuccess', 'Batch created successfully. Batch ID: ' + batchId);
+                        }
+                    });
+            } catch(error) {
+                showError('mintError', parseContractError(error));
+            }
         }
 
         async function releaseBatch() {
-            const batchId     = document.getElementById('releaseBatchId').value;
-            const distributor = document.getElementById('distributorAddress').value;
+            const batchId     = document.getElementById('releaseBatchId').value.trim();
+            const distributor = document.getElementById('distributorAddress').value.trim();
 
-            await controlContract.methods.release(batchId, distributor)
-                .send({ from: web3.eth.defaultAccount })
-                .on('transactionHash', function(hash) {
-                    console.log('Transaction Hash:', hash);
-                })
-                .on('confirmation', function(confirmationNumber, receipt) {
-                    console.log('Confirmed:', receipt);
-                })
-                .catch(function(error) { console.error('Error releasing batch:', error); });
+            if (!batchId || isNaN(batchId) || Number(batchId) <= 0) {
+                showError('releaseError', 'Invalid input — please enter a valid Batch ID.');
+                return;
+            }
+            if (!distributor || !distributor.startsWith('0x') || distributor.length !== 42) {
+                showError('releaseError', 'Invalid input — please enter a valid distributor wallet address.');
+                return;
+            }
 
-            document.getElementById('productDetails').textContent = 'Batch ' + batchId + ' released. Status → Released.';
+            try {
+                await controlContract.methods.release(batchId, distributor)
+                    .send({ from: web3.eth.defaultAccount })
+                    .on('transactionHash', function(hash) { console.log('Transaction Hash:', hash); });
+                showSuccess('releaseSuccess', 'Batch ' + batchId + ' released. Status → Released.');
+                document.getElementById('productDetails').textContent = '';
+            } catch(error) {
+                showError('releaseError', parseContractError(error));
+            }
         }
+
+
+
+        // async function mintBatch() {
+        //     const medicineName = document.getElementById('medicineName').value;
+        //     const batchSize    = document.getElementById('batchSize').value;
+        //     const expiryRaw    = document.getElementById('expiryDate').value;
+        //     const expiryTs     = Math.floor(new Date(expiryRaw).getTime() / 1000);
+
+        //     await mintContract.methods.mintBatch(medicineName, batchSize, expiryTs)
+        //         .send({ from: web3.eth.defaultAccount })
+        //         .on('transactionHash', function(hash) {
+        //             console.log('Transaction Hash:', hash);
+        //         })
+        //         .on('receipt', function(receipt) {
+        //             console.log('Receipt:', receipt);
+        //             // Read batchId from BatchMinted event
+        //             const event = receipt.events && receipt.events.BatchMinted;
+        //             if (event) {
+        //                 const batchId = event.returnValues.batchId;
+        //                 const resultDiv = document.getElementById('batchIdResult');
+        //                 resultDiv.style.display = 'block';
+        //                 resultDiv.textContent = 'Batch ID: ' + batchId + ' — record this and include it on the packing slip';
+        //                 document.getElementById('releaseBatchId').value = batchId;
+        //             }
+        //         })
+        //         .catch(function(error) { console.error('Error minting batch:', error); });
+        // }
+
+        // async function releaseBatch() {
+        //     const batchId     = document.getElementById('releaseBatchId').value;
+        //     const distributor = document.getElementById('distributorAddress').value;
+
+        //     await controlContract.methods.release(batchId, distributor)
+        //         .send({ from: web3.eth.defaultAccount })
+        //         .on('transactionHash', function(hash) {
+        //             console.log('Transaction Hash:', hash);
+        //         })
+        //         .on('confirmation', function(confirmationNumber, receipt) {
+        //             console.log('Confirmed:', receipt);
+        //         })
+        //         .catch(function(error) { console.error('Error releasing batch:', error); });
+
+        //     document.getElementById('productDetails').textContent = 'Batch ' + batchId + ' released. Status → Released.';
+        // }
     </script>
 
 </body>

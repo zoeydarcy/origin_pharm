@@ -83,6 +83,28 @@
             color: #1553B6;
             margin-bottom: 20px;
         }
+        
+        .error-msg {
+            display: none;
+            margin-top: 8px;
+            padding: 8px 12px;
+            background: #FDECEA;
+            border: 1px solid #F7C1C1;
+            border-radius: 5px;
+            font-size: 12px;
+            color: #C0392B;
+        }
+
+        .success-msg {
+            display: none;
+            margin-top: 8px;
+            padding: 8px 12px;
+            background: #E6F5EE;
+            border: 1px solid #C0DD97;
+            border-radius: 5px;
+            font-size: 12px;
+            color: #0A7A4C;
+        }
 
         label {
             display: block;
@@ -242,6 +264,33 @@
 
         const statusLabels = ['Produced', 'Released', 'InTransit', 'Received'];
 
+        // ── Error helpers ────────────────────────────────────────────────────
+        function parseContractError(error) {
+            const msg = error?.message || '';
+            const match = msg.match(/reason string '(.+?)'/i)
+                    || msg.match(/"message":"(.+?)"/i)
+                    || msg.match(/reverted with reason string "(.+?)"/i);
+            if (match) return match[1];
+            if (msg.includes('User denied')) return 'Transaction cancelled by user.';
+            return 'Transaction failed. Check your role and inputs.';
+        }
+
+        function showError(id, message) {
+            const el = document.getElementById(id);
+            el.textContent = message;
+            el.style.display = 'block';
+            document.getElementById(id.replace('Error', 'Success')).style.display = 'none';
+        }
+
+        function showSuccess(id, message) {
+            const el = document.getElementById(id);
+            el.textContent = message;
+            el.style.display = 'block';
+            document.getElementById(id.replace('Success', 'Error')).style.display = 'none';
+        }
+        // ── End error helpers ─────────────────────────────────────────────────
+
+
         async function resolvePartyName(address) {
             const ZERO = '0x0000000000000000000000000000000000000000';
             if (!address || address === ZERO) return 'Origin Pharm (System)';
@@ -264,57 +313,126 @@
             return 'Unknown';
         }
 
+
+        
         async function getBatchStatus() {
-            const batchId = document.getElementById('batchId').value;
+            const batchId   = document.getElementById('batchId').value.trim();
+            const resultDiv = document.getElementById('batchStatusResult');
 
-            const result = await verificationContract.methods.batchStatus(batchId).call();
-
-            const medicineName     = result[0];
-            const batchNumber      = result[1];
-            const manufacturerName = result[2];
-            const manufactureDate  = new Date(result[4] * 1000).toLocaleDateString('en-AU');
-            const expiryDate       = new Date(result[5] * 1000).toLocaleDateString('en-AU');
-            const status           = result[6];
-            const verified         = result[7];
-            const currentOwner     = result[8];
-            const custodyTrail     = result[9];
-
-            const currentOwnerName = await resolvePartyName(currentOwner);
-
-            const verifiedBadge = verified
-                ? '<span class="verified-yes">✓ Verified</span>'
-                : '<span class="verified-no">⏳ Not Yet Verified</span>';
-
-            let trailHTML = '';
-            for (let i = 0; i < custodyTrail.length; i++) {
-                const rec       = custodyTrail[i];
-                const recStatus = statusLabels[rec.status] || rec.status;
-                const ts        = new Date(rec.timestamp * 1000).toLocaleDateString('en-AU');
-                const fromName  = await resolvePartyName(rec.from);
-                const toName    = await resolvePartyName(rec.to);
-                trailHTML += `<div class="trail-item">
-                    <strong>${i + 1}. ${recStatus}</strong>
-                    &nbsp;·&nbsp; ${fromName} → ${toName}
-                    &nbsp;·&nbsp; ${ts}
-                    ${rec.notes ? ' · ' + rec.notes : ''}
-                </div>`;
+            if (!batchId || isNaN(batchId) || Number(batchId) <= 0) {
+                resultDiv.style.display = 'block';
+                resultDiv.innerHTML = '<p style="color:#C0392B;">Invalid input — please enter a valid Batch ID.</p>';
+                return;
             }
 
-            const resultDiv = document.getElementById('batchStatusResult');
-            resultDiv.style.display = 'block';
-            resultDiv.innerHTML = `
-                <p><strong>Medicine:</strong> ${medicineName}</p>
-                <p><strong>Batch Reference:</strong> ${batchNumber}</p>
-                <p><strong>Manufacturer:</strong> ${manufacturerName}</p>
-                <p><strong>Manufacture Date:</strong> ${manufactureDate}</p>
-                <p><strong>Expiry Date:</strong> ${expiryDate}</p>
-                <p><strong>Status:</strong> ${status}</p>
-                <p><strong>Verified:</strong> ${verifiedBadge}</p>
-                <p><strong>Current Custodian:</strong> ${currentOwnerName}</p>
-                <p style="margin-top:10px;margin-bottom:6px;font-weight:600;font-size:12px;color:#6B82A0;text-transform:uppercase;letter-spacing:0.8px;">Custody Trail</p>
-                ${trailHTML || '<div class="trail-item">No transfers recorded yet.</div>'}
-            `;
+            try {
+                const result = await verificationContract.methods.batchStatus(batchId).call();
+
+                const medicineName     = result[0];
+                const batchNumber      = result[1];
+                const manufacturerName = result[2];
+                const manufactureDate  = new Date(result[4] * 1000).toLocaleDateString('en-AU');
+                const expiryDate       = new Date(result[5] * 1000).toLocaleDateString('en-AU');
+                const status           = result[6];
+                const verified         = result[7];
+                const currentOwner     = result[8];
+                const custodyTrail     = result[9];
+
+                const currentOwnerName = await resolvePartyName(currentOwner);
+
+                const verifiedBadge = verified
+                    ? '<span class="verified-yes">✓ Verified</span>'
+                    : '<span class="verified-no">⏳ Not Yet Verified</span>';
+
+                let trailHTML = '';
+                for (let i = 0; i < custodyTrail.length; i++) {
+                    const rec       = custodyTrail[i];
+                    const recStatus = statusLabels[rec.status] || rec.status;
+                    const ts        = new Date(rec.timestamp * 1000).toLocaleDateString('en-AU');
+                    const fromName  = await resolvePartyName(rec.from);
+                    const toName    = await resolvePartyName(rec.to);
+                    trailHTML += `<div class="trail-item">
+                        <strong>${i + 1}. ${recStatus}</strong>
+                        &nbsp;·&nbsp; ${fromName} → ${toName}
+                        &nbsp;·&nbsp; ${ts}
+                        ${rec.notes ? ' · ' + rec.notes : ''}
+                    </div>`;
+                }
+
+                resultDiv.style.display = 'block';
+                resultDiv.innerHTML = `
+                    <p><strong>Medicine:</strong> ${medicineName}</p>
+                    <p><strong>Batch Reference:</strong> ${batchNumber}</p>
+                    <p><strong>Manufacturer:</strong> ${manufacturerName}</p>
+                    <p><strong>Manufacture Date:</strong> ${manufactureDate}</p>
+                    <p><strong>Expiry Date:</strong> ${expiryDate}</p>
+                    <p><strong>Status:</strong> ${status}</p>
+                    <p><strong>Verified:</strong> ${verifiedBadge}</p>
+                    <p><strong>Current Custodian:</strong> ${currentOwnerName}</p>
+                    <p style="margin-top:10px;margin-bottom:6px;font-weight:600;font-size:12px;
+                            color:#6B82A0;text-transform:uppercase;letter-spacing:0.8px;">Custody Trail</p>
+                    ${trailHTML || '<div class="trail-item">No transfers recorded yet.</div>'}
+                `;
+            } catch(error) {
+                resultDiv.style.display = 'block';
+                resultDiv.innerHTML = '<p style="color:#C0392B;">Batch ID not found. Please check the ID and try again.</p>';
+                console.error(error);
+            }
         }
+
+
+
+        // async function getBatchStatus() {
+        //     const batchId = document.getElementById('batchId').value;
+
+        //     const result = await verificationContract.methods.batchStatus(batchId).call();
+
+        //     const medicineName     = result[0];
+        //     const batchNumber      = result[1];
+        //     const manufacturerName = result[2];
+        //     const manufactureDate  = new Date(result[4] * 1000).toLocaleDateString('en-AU');
+        //     const expiryDate       = new Date(result[5] * 1000).toLocaleDateString('en-AU');
+        //     const status           = result[6];
+        //     const verified         = result[7];
+        //     const currentOwner     = result[8];
+        //     const custodyTrail     = result[9];
+
+        //     const currentOwnerName = await resolvePartyName(currentOwner);
+
+        //     const verifiedBadge = verified
+        //         ? '<span class="verified-yes">✓ Verified</span>'
+        //         : '<span class="verified-no">⏳ Not Yet Verified</span>';
+
+        //     let trailHTML = '';
+        //     for (let i = 0; i < custodyTrail.length; i++) {
+        //         const rec       = custodyTrail[i];
+        //         const recStatus = statusLabels[rec.status] || rec.status;
+        //         const ts        = new Date(rec.timestamp * 1000).toLocaleDateString('en-AU');
+        //         const fromName  = await resolvePartyName(rec.from);
+        //         const toName    = await resolvePartyName(rec.to);
+        //         trailHTML += `<div class="trail-item">
+        //             <strong>${i + 1}. ${recStatus}</strong>
+        //             &nbsp;·&nbsp; ${fromName} → ${toName}
+        //             &nbsp;·&nbsp; ${ts}
+        //             ${rec.notes ? ' · ' + rec.notes : ''}
+        //         </div>`;
+        //     }
+
+        //     const resultDiv = document.getElementById('batchStatusResult');
+        //     resultDiv.style.display = 'block';
+        //     resultDiv.innerHTML = `
+        //         <p><strong>Medicine:</strong> ${medicineName}</p>
+        //         <p><strong>Batch Reference:</strong> ${batchNumber}</p>
+        //         <p><strong>Manufacturer:</strong> ${manufacturerName}</p>
+        //         <p><strong>Manufacture Date:</strong> ${manufactureDate}</p>
+        //         <p><strong>Expiry Date:</strong> ${expiryDate}</p>
+        //         <p><strong>Status:</strong> ${status}</p>
+        //         <p><strong>Verified:</strong> ${verifiedBadge}</p>
+        //         <p><strong>Current Custodian:</strong> ${currentOwnerName}</p>
+        //         <p style="margin-top:10px;margin-bottom:6px;font-weight:600;font-size:12px;color:#6B82A0;text-transform:uppercase;letter-spacing:0.8px;">Custody Trail</p>
+        //         ${trailHTML || '<div class="trail-item">No transfers recorded yet.</div>'}
+        //     `;
+        // }
 
         window.addEventListener('load', function() {
             var params  = new URLSearchParams(window.location.search);

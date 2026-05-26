@@ -42,7 +42,27 @@
             border: 1px solid rgba(255,255,255,0.25);
             letter-spacing: 0.3px;
         }
+        .error-msg {
+            display: none;
+            margin-top: 8px;
+            padding: 8px 12px;
+            background: #FDECEA;
+            border: 1px solid #F7C1C1;
+            border-radius: 5px;
+            font-size: 12px;
+            color: #C0392B;
+        }
 
+        .success-msg {
+            display: none;
+            margin-top: 8px;
+            padding: 8px 12px;
+            background: #E6F5EE;
+            border: 1px solid #C0DD97;
+            border-radius: 5px;
+            font-size: 12px;
+            color: #0A7A4C;
+        }
         .container {
             max-width: 720px;
             margin: 36px auto;
@@ -160,6 +180,8 @@
             <label for="notes">Shipment Notes (optional)</label>
             <textarea id="notes" placeholder="e.g. AusPost Ref: AUS-993, Temp: 2-8°C"></textarea>
             <button onclick="recordShipment()">Record Shipment</button>
+            <div id="shipError"   class="error-msg"></div>
+            <div id="shipSuccess" class="success-msg"></div>
             <div id="productDetails"></div>
         </div>
 
@@ -196,24 +218,76 @@
 
         const controlContract = new web3.eth.Contract(controlContractABI, controlContractAddress);
 
-        async function recordShipment() {
-            const batchId         = document.getElementById('batchId').value;
-            const pharmacyAddress = document.getElementById('pharmacyAddress').value;
-            const notes           = document.getElementById('notes').value;
-
-            await controlContract.methods.shipment(batchId, pharmacyAddress, notes)
-                .send({ from: web3.eth.defaultAccount })
-                .on('transactionHash', function(hash) {
-                    console.log('Transaction Hash:', hash);
-                })
-                .on('confirmation', function(confirmationNumber, receipt) {
-                    console.log('Confirmation Number:', confirmationNumber);
-                    console.log('Receipt:', receipt);
-                })
-                .catch(function(error) { console.error('Error recording shipment:', error); });
-
-            document.getElementById('productDetails').textContent = 'Batch ' + batchId + ' shipment recorded. Status → InTransit.';
+    // ── Error helpers ────────────────────────────────────────────────────
+        function parseContractError(error) {
+            const msg = error?.message || '';
+            const match = msg.match(/reason string '(.+?)'/i)
+                    || msg.match(/"message":"(.+?)"/i)
+                    || msg.match(/reverted with reason string "(.+?)"/i);
+            if (match) return match[1];
+            if (msg.includes('User denied')) return 'Transaction cancelled by user.';
+            return 'Transaction failed. Check your role and inputs.';
         }
+
+        function showError(id, message) {
+            const el = document.getElementById(id);
+            el.textContent = message;
+            el.style.display = 'block';
+            document.getElementById(id.replace('Error', 'Success')).style.display = 'none';
+        }
+
+        function showSuccess(id, message) {
+            const el = document.getElementById(id);
+            el.textContent = message;
+            el.style.display = 'block';
+            document.getElementById(id.replace('Success', 'Error')).style.display = 'none';
+        }
+        // ── End error helpers ─────────────────────────────────────────────────
+        async function recordShipment() {
+            const batchId         = document.getElementById('batchId').value.trim();
+            const pharmacyAddress = document.getElementById('pharmacyAddress').value.trim();
+            const notes           = document.getElementById('notes').value.trim();
+
+            if (!batchId || isNaN(batchId) || Number(batchId) <= 0) {
+                showError('shipError', 'Invalid input — please enter a valid Batch ID.');
+                return;
+            }
+            if (!pharmacyAddress || !pharmacyAddress.startsWith('0x') || pharmacyAddress.length !== 42) {
+                showError('shipError', 'Invalid input — please enter a valid pharmacy wallet address.');
+                return;
+            }
+
+            try {
+                await controlContract.methods.shipment(batchId, pharmacyAddress, notes)
+                    .send({ from: web3.eth.defaultAccount })
+                    .on('transactionHash', function(hash) { console.log('Transaction Hash:', hash); });
+                showSuccess('shipSuccess', 'Batch ' + batchId + ' shipment recorded. Status → InTransit.');
+                document.getElementById('productDetails').textContent = '';
+            } catch(error) {
+                showError('shipError', parseContractError(error));
+            }
+        }
+
+
+
+        // async function recordShipment() {
+        //     const batchId         = document.getElementById('batchId').value;
+        //     const pharmacyAddress = document.getElementById('pharmacyAddress').value;
+        //     const notes           = document.getElementById('notes').value;
+
+        //     await controlContract.methods.shipment(batchId, pharmacyAddress, notes)
+        //         .send({ from: web3.eth.defaultAccount })
+        //         .on('transactionHash', function(hash) {
+        //             console.log('Transaction Hash:', hash);
+        //         })
+        //         .on('confirmation', function(confirmationNumber, receipt) {
+        //             console.log('Confirmation Number:', confirmationNumber);
+        //             console.log('Receipt:', receipt);
+        //         })
+        //         .catch(function(error) { console.error('Error recording shipment:', error); });
+
+        //     document.getElementById('productDetails').textContent = 'Batch ' + batchId + ' shipment recorded. Status → InTransit.';
+        // }
     </script>
 
 </body>

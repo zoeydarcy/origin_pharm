@@ -39,7 +39,27 @@
             color: #6B82A0;
             margin: 28px 0 10px;
         }
+        .error-msg {
+            display: none;
+            margin-top: 8px;
+            padding: 8px 12px;
+            background: #FDECEA;
+            border: 1px solid #F7C1C1;
+            border-radius: 5px;
+            font-size: 12px;
+            color: #C0392B;
+        }
 
+        .success-msg {
+            display: none;
+            margin-top: 8px;
+            padding: 8px 12px;
+            background: #E6F5EE;
+            border: 1px solid #C0DD97;
+            border-radius: 5px;
+            font-size: 12px;
+            color: #0A7A4C;
+        }
         .card {
             background: #FFFFFF;
             border: 1px solid #D6E0EF;
@@ -179,6 +199,8 @@
             <label for="controlContractAddr">ControlContract Address</label>
             <input type="text" id="controlContractAddr" placeholder="0x...">
             <button onclick="setControlContract()">Wire Up</button>
+            <div id="wireError"   class="error-msg"></div>
+            <div id="wireSuccess" class="success-msg"></div>
         </div>
 
         <!-- MANUFACTURERS -->
@@ -190,11 +212,15 @@
             <label for="mfrName">Verified Name</label>
             <input type="text" id="mfrName" placeholder="e.g. Pfizer Australia Pty Ltd">
             <button onclick="authoriseManufacturer()">Authorise</button>
+            <div id="mfrAuthError"   class="error-msg"></div>
+            <div id="mfrAuthSuccess" class="success-msg"></div> 
             <hr>
             <h3>Revoke Manufacturer</h3>
             <label for="mfrRevokeAddress">Wallet Address</label>
             <input type="text" id="mfrRevokeAddress" placeholder="0x...">
             <button class="revoke" onclick="revokeManufacturer()">Revoke</button>
+            <div id="mfrRevokeError"   class="error-msg"></div>
+            <div id="mfrRevokeSuccess" class="success-msg"></div>       
         </div>
 
         <!-- DISTRIBUTORS -->
@@ -206,11 +232,15 @@
             <label for="distName">Verified Name</label>
             <input type="text" id="distName" placeholder="e.g. AusPost Logistics">
             <button onclick="authoriseDistributor()">Authorise</button>
+            <div id="distAuthError"   class="error-msg"></div>
+            <div id="distAuthSuccess" class="success-msg"></div>
             <hr>
             <h3>Revoke Distributor</h3>
             <label for="distRevokeAddress">Wallet Address</label>
             <input type="text" id="distRevokeAddress" placeholder="0x...">
             <button class="revoke" onclick="revokeDistributor()">Revoke</button>
+            <div id="distRevokeError"   class="error-msg"></div>
+            <div id="distRevokeSuccess" class="success-msg"></div>
         </div>
 
         <!-- PHARMACIES -->
@@ -222,11 +252,15 @@
             <label for="phName">Verified Name</label>
             <input type="text" id="phName" placeholder="e.g. Terry White — George St">
             <button onclick="authorisePharmacy()">Authorise</button>
+            <div id="phAuthError"   class="error-msg"></div>
+            <div id="phAuthSuccess" class="success-msg"></div>
             <hr>
             <h3>Revoke Pharmacy</h3>
             <label for="phRevokeAddress">Wallet Address</label>
             <input type="text" id="phRevokeAddress" placeholder="0x...">
             <button class="revoke" onclick="revokePharmacy()">Revoke</button>
+            <div id="phRevokeError"   class="error-msg"></div>
+            <div id="phRevokeSuccess" class="success-msg"></div>
         </div>
 
         <!-- LOOKUP ADDRESSES -->
@@ -425,74 +459,168 @@
 
         const verificationContract = new web3.eth.Contract(verificationContractABI, verificationContractAddress);
 
+
+        // ── Error helpers ────────────────────────────────────────────────────
+        function parseContractError(error) {
+            const msg = error?.message || '';
+            const match = msg.match(/reason string '(.+?)'/i)
+                    || msg.match(/"message":"(.+?)"/i)
+                    || msg.match(/reverted with reason string "(.+?)"/i);
+            if (match) return match[1];
+            if (msg.includes('User denied')) return 'Transaction cancelled by user.';
+            return 'Transaction failed. Check your role and inputs.';
+        }
+
+        function showError(id, message) {
+            const el = document.getElementById(id);
+            el.textContent = message;
+            el.style.display = 'block';
+            document.getElementById(id.replace('Error', 'Success')).style.display = 'none';
+        }
+
+        function showSuccess(id, message) {
+            const el = document.getElementById(id);
+            el.textContent = message;
+            el.style.display = 'block';
+            document.getElementById(id.replace('Success', 'Error')).style.display = 'none';
+        }
+        // ── End error helpers ─────────────────────────────────────────────────
+
+        
         async function setControlContract() {
-            const addr = document.getElementById('controlContractAddr').value;
-            await mintContract.methods.setControlContract(addr)
-                .send({ from: web3.eth.defaultAccount })
-                .on('transactionHash', function(hash) { console.log('TX Hash:', hash); })
-                .on('confirmation', function(num, receipt) { console.log('Confirmed:', receipt); });
-            alert('ControlContract wired successfully!');
+            const addr = document.getElementById('controlContractAddr').value.trim();
+            if (!addr || !addr.startsWith('0x') || addr.length !== 42) {
+                showError('wireError', 'Invalid input — please enter a valid contract address (0x...).');
+                return;
+            }
+            try {
+                await mintContract.methods.setControlContract(addr)
+                    .send({ from: web3.eth.defaultAccount })
+                    .on('transactionHash', function(hash) { console.log('TX Hash:', hash); });
+                showSuccess('wireSuccess', 'ControlContract wired successfully!');
+            } catch(error) {
+                showError('wireError', parseContractError(error));
+            }
         }
 
         async function authoriseManufacturer() {
-            const address = document.getElementById('mfrAddress').value;
-            const name    = document.getElementById('mfrName').value;
-            await mintContract.methods.authoriseManufacturer(address, name)
-                .send({ from: web3.eth.defaultAccount })
-                .on('transactionHash', function(hash) { console.log('TX Hash:', hash); });
-            alert('Manufacturer authorised: ' + name);
+            const address = document.getElementById('mfrAddress').value.trim();
+            const name    = document.getElementById('mfrName').value.trim();
+            if (!address || !address.startsWith('0x') || address.length !== 42) {
+                showError('mfrAuthError', 'Invalid input — please enter a valid wallet address.');
+                return;
+            }
+            if (!name) {
+                showError('mfrAuthError', 'Invalid input — please enter a verified name.');
+                return;
+            }
+            try {
+                await mintContract.methods.authoriseManufacturer(address, name)
+                    .send({ from: web3.eth.defaultAccount })
+                    .on('transactionHash', function(hash) { console.log('TX Hash:', hash); });
+                showSuccess('mfrAuthSuccess', 'Manufacturer authorised: ' + name);
+            } catch(error) {
+                showError('mfrAuthError', parseContractError(error));
+            }
         }
 
         async function revokeManufacturer() {
-            const address = document.getElementById('mfrRevokeAddress').value;
-            await mintContract.methods.revokeManufacturer(address)
-                .send({ from: web3.eth.defaultAccount })
-                .on('transactionHash', function(hash) { console.log('TX Hash:', hash); });
-            alert('Manufacturer revoked.');
+            const address = document.getElementById('mfrRevokeAddress').value.trim();
+            if (!address || !address.startsWith('0x') || address.length !== 42) {
+                showError('mfrRevokeError', 'Invalid input — please enter a valid wallet address.');
+                return;
+            }
+            try {
+                await mintContract.methods.revokeManufacturer(address)
+                    .send({ from: web3.eth.defaultAccount })
+                    .on('transactionHash', function(hash) { console.log('TX Hash:', hash); });
+                showSuccess('mfrRevokeSuccess', 'Manufacturer revoked.');
+            } catch(error) {
+                showError('mfrRevokeError', parseContractError(error));
+            }
         }
 
         async function authoriseDistributor() {
-            const address = document.getElementById('distAddress').value;
-            const name    = document.getElementById('distName').value;
-            await controlContract.methods.authoriseDistributor(address, name)
-                .send({ from: web3.eth.defaultAccount })
-                .on('transactionHash', function(hash) { console.log('TX Hash:', hash); });
-            alert('Distributor authorised: ' + name);
+            const address = document.getElementById('distAddress').value.trim();
+            const name    = document.getElementById('distName').value.trim();
+            if (!address || !address.startsWith('0x') || address.length !== 42) {
+                showError('distAuthError', 'Invalid input — please enter a valid wallet address.');
+                return;
+            }
+            if (!name) {
+                showError('distAuthError', 'Invalid input — please enter a verified name.');
+                return;
+            }
+            try {
+                await controlContract.methods.authoriseDistributor(address, name)
+                    .send({ from: web3.eth.defaultAccount })
+                    .on('transactionHash', function(hash) { console.log('TX Hash:', hash); });
+                showSuccess('distAuthSuccess', 'Distributor authorised: ' + name);
+            } catch(error) {
+                showError('distAuthError', parseContractError(error));
+            }
         }
 
         async function revokeDistributor() {
-            const address = document.getElementById('distRevokeAddress').value;
-            await controlContract.methods.revokeDistributor(address)
-                .send({ from: web3.eth.defaultAccount })
-                .on('transactionHash', function(hash) { console.log('TX Hash:', hash); });
-            alert('Distributor revoked.');
+            const address = document.getElementById('distRevokeAddress').value.trim();
+            if (!address || !address.startsWith('0x') || address.length !== 42) {
+                showError('distRevokeError', 'Invalid input — please enter a valid wallet address.');
+                return;
+            }
+            try {
+                await controlContract.methods.revokeDistributor(address)
+                    .send({ from: web3.eth.defaultAccount })
+                    .on('transactionHash', function(hash) { console.log('TX Hash:', hash); });
+                showSuccess('distRevokeSuccess', 'Distributor revoked.');
+            } catch(error) {
+                showError('distRevokeError', parseContractError(error));
+            }
         }
 
         async function authorisePharmacy() {
-            const address = document.getElementById('phAddress').value;
-            const name = document.getElementById('phName').value;
-            await controlContract.methods.authorisePharmacy(address, name)
-                .send({ from: web3.eth.defaultAccount })
-                .on('transactionHash', function(hash) { console.log('TX Hash:', hash); });
-            alert('Pharmacy authorised: ' + name);
+            const address = document.getElementById('phAddress').value.trim();
+            const name    = document.getElementById('phName').value.trim();
+            if (!address || !address.startsWith('0x') || address.length !== 42) {
+                showError('phAuthError', 'Invalid input — please enter a valid wallet address.');
+                return;
+            }
+            if (!name) {
+                showError('phAuthError', 'Invalid input — please enter a verified name.');
+                return;
+            }
+            try {
+                await controlContract.methods.authorisePharmacy(address, name)
+                    .send({ from: web3.eth.defaultAccount })
+                    .on('transactionHash', function(hash) { console.log('TX Hash:', hash); });
+                showSuccess('phAuthSuccess', 'Pharmacy authorised: ' + name);
+            } catch(error) {
+                showError('phAuthError', parseContractError(error));
+            }
         }
 
         async function revokePharmacy() {
-            const address = document.getElementById('phRevokeAddress').value;
-            await controlContract.methods.revokePharmacy(address)
-                .send({ from: web3.eth.defaultAccount })
-                .on('transactionHash', function(hash) { console.log('TX Hash:', hash); });
-            alert('Pharmacy revoked.');
+            const address = document.getElementById('phRevokeAddress').value.trim();
+            if (!address || !address.startsWith('0x') || address.length !== 42) {
+                showError('phRevokeError', 'Invalid input — please enter a valid wallet address.');
+                return;
+            }
+            try {
+                await controlContract.methods.revokePharmacy(address)
+                    .send({ from: web3.eth.defaultAccount })
+                    .on('transactionHash', function(hash) { console.log('TX Hash:', hash); });
+                showSuccess('phRevokeSuccess', 'Pharmacy revoked.');
+            } catch(error) {
+                showError('phRevokeError', parseContractError(error));
+            }
         }
-
 
         async function lookupParticipant() {
             const address   = document.getElementById('lookupAddress').value.trim();
             const resultDiv = document.getElementById('lookupResult');
 
-            if (!address || !address.startsWith('0x')) {
+            if (!address || !address.startsWith('0x') || address.length !== 42) {
                 resultDiv.style.display = 'block';
-                resultDiv.innerHTML = '<p style="color:#C0392B;">Please enter a valid wallet address starting with 0x.</p>';
+                resultDiv.innerHTML = '<p style="color:#C0392B;">Invalid input — please enter a valid wallet address starting with 0x.</p>';
                 return;
             }
 
@@ -500,7 +628,6 @@
             resultDiv.innerHTML = '<p style="color:#6B82A0;">Checking registries...</p>';
 
             try {
-                // Check all three registries in parallel
                 const [mfrResult, distResult, phResult] = await Promise.all([
                     mintContract.methods.authorisedManufacturers(address).call().catch(() => null),
                     controlContract.methods.authorisedDistributors(address).call().catch(() => null),
@@ -514,23 +641,19 @@
                     found = true;
                     html += buildResultCard('Manufacturer', mfrResult.name, address, true);
                 }
-
                 if (distResult && distResult.isAuthorised) {
                     found = true;
                     html += buildResultCard('Distributor', distResult.name, address, true);
                 }
-
                 if (phResult && phResult.isAuthorised) {
                     found = true;
                     html += buildResultCard('Pharmacy', phResult.name, address, true);
                 }
 
-                // Check if exists but revoked
                 if (!found) {
                     const revokedMfr  = mfrResult  && !mfrResult.isAuthorised  && mfrResult.name  && mfrResult.name.length  > 0;
                     const revokedDist = distResult && !distResult.isAuthorised && distResult.name && distResult.name.length > 0;
                     const revokedPh   = phResult   && !phResult.isAuthorised   && phResult.name   && phResult.name.length   > 0;
-
                     if (revokedMfr)  html += buildResultCard('Manufacturer', mfrResult.name,  address, false);
                     if (revokedDist) html += buildResultCard('Distributor',  distResult.name, address, false);
                     if (revokedPh)   html += buildResultCard('Pharmacy',     phResult.name,   address, false);
@@ -538,9 +661,7 @@
 
                 if (!found && html === '') {
                     resultDiv.innerHTML = `
-                        <p style="color:#C0392B; font-size:13px;">
-                            This address is not registered in any participant registry.
-                        </p>
+                        <p style="color:#C0392B; font-size:13px;">This address is not registered in any participant registry.</p>
                         <p style="font-size:12px; color:#6B82A0; margin-top:6px;">
                             Address checked: <span class="address-mono">${address}</span>
                         </p>`;
@@ -558,11 +679,9 @@
             const badge = isAuthorised
                 ? '<span style="background:#E6F5EE; color:#0A7A4C; border-radius:12px; padding:2px 10px; font-size:11px; font-weight:700;">✓ Authorised</span>'
                 : '<span style="background:#FDECEA; color:#C0392B; border-radius:12px; padding:2px 10px; font-size:11px; font-weight:700;">✗ Revoked</span>';
-
             return `
                 <div style="background:#F8FAFD; border:1px solid #D6E0EF; border-radius:6px; padding:12px 14px; margin-bottom:10px;">
-                    <p style="font-size:11px; font-weight:700; color:#6B82A0; text-transform:uppercase;
-                            letter-spacing:0.8px; margin-bottom:8px;">${role}</p>
+                    <p style="font-size:11px; font-weight:700; color:#6B82A0; text-transform:uppercase; letter-spacing:0.8px; margin-bottom:8px;">${role}</p>
                     <p style="margin-bottom:6px;"><strong>Registered Name:</strong> ${name}</p>
                     <p style="margin-bottom:6px;"><strong>Status:</strong> ${badge}</p>
                     <p style="margin-bottom:0;"><strong>Wallet Address:</strong><br>
@@ -570,6 +689,155 @@
                     </p>
                 </div>`;
         }
+
+
+
+
+        // async function setControlContract() {
+        //     const addr = document.getElementById('controlContractAddr').value;
+        //     await mintContract.methods.setControlContract(addr)
+        //         .send({ from: web3.eth.defaultAccount })
+        //         .on('transactionHash', function(hash) { console.log('TX Hash:', hash); })
+        //         .on('confirmation', function(num, receipt) { console.log('Confirmed:', receipt); });
+        //     alert('ControlContract wired successfully!');
+        // }
+
+        // async function authoriseManufacturer() {
+        //     const address = document.getElementById('mfrAddress').value;
+        //     const name    = document.getElementById('mfrName').value;
+        //     await mintContract.methods.authoriseManufacturer(address, name)
+        //         .send({ from: web3.eth.defaultAccount })
+        //         .on('transactionHash', function(hash) { console.log('TX Hash:', hash); });
+        //     alert('Manufacturer authorised: ' + name);
+        // }
+
+        // async function revokeManufacturer() {
+        //     const address = document.getElementById('mfrRevokeAddress').value;
+        //     await mintContract.methods.revokeManufacturer(address)
+        //         .send({ from: web3.eth.defaultAccount })
+        //         .on('transactionHash', function(hash) { console.log('TX Hash:', hash); });
+        //     alert('Manufacturer revoked.');
+        // }
+
+        // async function authoriseDistributor() {
+        //     const address = document.getElementById('distAddress').value;
+        //     const name    = document.getElementById('distName').value;
+        //     await controlContract.methods.authoriseDistributor(address, name)
+        //         .send({ from: web3.eth.defaultAccount })
+        //         .on('transactionHash', function(hash) { console.log('TX Hash:', hash); });
+        //     alert('Distributor authorised: ' + name);
+        // }
+
+        // async function revokeDistributor() {
+        //     const address = document.getElementById('distRevokeAddress').value;
+        //     await controlContract.methods.revokeDistributor(address)
+        //         .send({ from: web3.eth.defaultAccount })
+        //         .on('transactionHash', function(hash) { console.log('TX Hash:', hash); });
+        //     alert('Distributor revoked.');
+        // }
+
+        // async function authorisePharmacy() {
+        //     const address = document.getElementById('phAddress').value;
+        //     const name = document.getElementById('phName').value;
+        //     await controlContract.methods.authorisePharmacy(address, name)
+        //         .send({ from: web3.eth.defaultAccount })
+        //         .on('transactionHash', function(hash) { console.log('TX Hash:', hash); });
+        //     alert('Pharmacy authorised: ' + name);
+        // }
+
+        // async function revokePharmacy() {
+        //     const address = document.getElementById('phRevokeAddress').value;
+        //     await controlContract.methods.revokePharmacy(address)
+        //         .send({ from: web3.eth.defaultAccount })
+        //         .on('transactionHash', function(hash) { console.log('TX Hash:', hash); });
+        //     alert('Pharmacy revoked.');
+        // }
+
+
+        // async function lookupParticipant() {
+        //     const address   = document.getElementById('lookupAddress').value.trim();
+        //     const resultDiv = document.getElementById('lookupResult');
+
+        //     if (!address || !address.startsWith('0x')) {
+        //         resultDiv.style.display = 'block';
+        //         resultDiv.innerHTML = '<p style="color:#C0392B;">Please enter a valid wallet address starting with 0x.</p>';
+        //         return;
+        //     }
+
+        //     resultDiv.style.display = 'block';
+        //     resultDiv.innerHTML = '<p style="color:#6B82A0;">Checking registries...</p>';
+
+        //     try {
+        //         // Check all three registries in parallel
+        //         const [mfrResult, distResult, phResult] = await Promise.all([
+        //             mintContract.methods.authorisedManufacturers(address).call().catch(() => null),
+        //             controlContract.methods.authorisedDistributors(address).call().catch(() => null),
+        //             controlContract.methods.authorisedPharmacies(address).call().catch(() => null)
+        //         ]);
+
+        //         let found = false;
+        //         let html  = '';
+
+        //         if (mfrResult && mfrResult.isAuthorised) {
+        //             found = true;
+        //             html += buildResultCard('Manufacturer', mfrResult.name, address, true);
+        //         }
+
+        //         if (distResult && distResult.isAuthorised) {
+        //             found = true;
+        //             html += buildResultCard('Distributor', distResult.name, address, true);
+        //         }
+
+        //         if (phResult && phResult.isAuthorised) {
+        //             found = true;
+        //             html += buildResultCard('Pharmacy', phResult.name, address, true);
+        //         }
+
+        //         // Check if exists but revoked
+        //         if (!found) {
+        //             const revokedMfr  = mfrResult  && !mfrResult.isAuthorised  && mfrResult.name  && mfrResult.name.length  > 0;
+        //             const revokedDist = distResult && !distResult.isAuthorised && distResult.name && distResult.name.length > 0;
+        //             const revokedPh   = phResult   && !phResult.isAuthorised   && phResult.name   && phResult.name.length   > 0;
+
+        //             if (revokedMfr)  html += buildResultCard('Manufacturer', mfrResult.name,  address, false);
+        //             if (revokedDist) html += buildResultCard('Distributor',  distResult.name, address, false);
+        //             if (revokedPh)   html += buildResultCard('Pharmacy',     phResult.name,   address, false);
+        //         }
+
+        //         if (!found && html === '') {
+        //             resultDiv.innerHTML = `
+        //                 <p style="color:#C0392B; font-size:13px;">
+        //                     This address is not registered in any participant registry.
+        //                 </p>
+        //                 <p style="font-size:12px; color:#6B82A0; margin-top:6px;">
+        //                     Address checked: <span class="address-mono">${address}</span>
+        //                 </p>`;
+        //         } else {
+        //             resultDiv.innerHTML = html;
+        //         }
+
+        //     } catch(error) {
+        //         resultDiv.innerHTML = '<p style="color:#C0392B;">Lookup failed. Check the address and try again.</p>';
+        //         console.error('lookupParticipant error:', error);
+        //     }
+        // }
+
+        // function buildResultCard(role, name, address, isAuthorised) {
+        //     const badge = isAuthorised
+        //         ? '<span style="background:#E6F5EE; color:#0A7A4C; border-radius:12px; padding:2px 10px; font-size:11px; font-weight:700;">✓ Authorised</span>'
+        //         : '<span style="background:#FDECEA; color:#C0392B; border-radius:12px; padding:2px 10px; font-size:11px; font-weight:700;">✗ Revoked</span>';
+
+        //     return `
+        //         <div style="background:#F8FAFD; border:1px solid #D6E0EF; border-radius:6px; padding:12px 14px; margin-bottom:10px;">
+        //             <p style="font-size:11px; font-weight:700; color:#6B82A0; text-transform:uppercase;
+        //                     letter-spacing:0.8px; margin-bottom:8px;">${role}</p>
+        //             <p style="margin-bottom:6px;"><strong>Registered Name:</strong> ${name}</p>
+        //             <p style="margin-bottom:6px;"><strong>Status:</strong> ${badge}</p>
+        //             <p style="margin-bottom:0;"><strong>Wallet Address:</strong><br>
+        //                 <span class="address-mono">${address}</span>
+        //             </p>
+        //         </div>`;
+        // }
     </script>
 
 </body>
